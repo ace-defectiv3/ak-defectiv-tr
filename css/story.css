@@ -1,3 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+#storyDisp,
+#storyDisp .dialog,
+#storyDisp .text,
+#storyDisp .dialog-name,
+.storyName {
+  font-family: "Manrope", system-ui, "Segoe UI", sans-serif;
+}
+
 :root {
   --story-width: min(
     (100vmin - var(--topNav-height)) * 16 / 9,
