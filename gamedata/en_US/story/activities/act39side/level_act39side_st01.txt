@@ -1,0 +1,857 @@
+[HEADER(key="title_test", is_skippable=true, fit_mode="BLACK_MASK")]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=0, block=true)]
+[stopmusic]
+[Dialog]
+[Background(image="49_g12_diving",screenadapt="coverall")]
+[Delay(time=1)]
+[PlaySound(key="$d_avg_jump_water")]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=2)]
+[PlaySound(key="$d_avg_underwateramb",volume=0.3,channel="1",loop=true)]
+[Subtitle(text="«Соль священна. Она в приливах, она в наших слезах.»", x=300, y=370, alignment="center", size=24, delay=0.04, width=700)]
+[subtitle]
+Он напрягает зрение в тёмной воде, выискивая на дне озера слабый отблеск металла.
+[Dialog]
+[PlaySound(key="$d_avg_swiminwater",volume=0.5,channel="2",loop=true)]
+Он медленно гребёт вперёд, дюйм за дюймом, пальцы шарят в иле, но находят лишь пряди водорослей.
+Ледяная вода обтекает кожу и волосы. Подступает растерянность. Он не знает, как отыщет ту золотую монету.
+[Dialog]
+[Subtitle(text="«Не смотри глазами. Пусть течение само подскажет, куда плыть.»", x=300, y=370, alignment="center", size=24, delay=0.04, width=700)]
+[subtitle]
+Голос с берега прорезает воду. Лица говорящего толком не разглядеть, но этот мягкий, дружелюбный тон успокаивает.
+И тогда он закрывает глаза, чувствуя, как вода струится мимо, и мысленно рисует картину озёрного дна.
+Вот он. Плотный металлический диск с затейливым тиснёным узором, лежащий поверх колышущихся водорослей.
+Он проводит пальцем по его поверхности, потом сжимает в кулаке. Плывёт обратно, и лицо незнакомца проступает всё чётче по мере приближения к берегу.
+[Dialog]
+[Subtitle(text="«Нашёл монету, мальчик мой?»", x=300, y=370, alignment="center", size=24, delay=0.04, width=700)]
+[subtitle]
+Он разжимает пальцы, и золотая монета ложится на ладонь. Круг на лицевой стороне рассечён прямой линией. Чем-то это напоминает далёкий горизонт, которого ему ещё только предстоит достичь.
+[Dialog]
+[StopSound(channel="1",fadetime=1.5)]
+[StopSound(channel="2",fadetime=1.5)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[charslot]
+[Background(image="bg_black",screenadapt="coverall")]
+[Delay(time=1)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$d_avg_piratepet_vo01")]
+[Delay(time=1.5)]
+[PlaySound(key="$d_avg_clothmovement")]
+[Delay(time=1.5)]
+[name="Исидро"]Кхр...
+[name="Исидро"]Что за запах... Рыбный... Солёный...
+[Dialog]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[charslot]
+[Background(image="bg_towerinside",screenadapt="coverall")]
+[Delay(time=1)]
+[PlayMusic(key="$comedy_loop", volume=0.6)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$d_avg_piratepet_vo01")]
+[charslot(slot="m",name="avg_npc_1586_1#1$1",focus="m",duration=1.5)]
+[Delay(time=2)]
+[name="Странное существо"]М-м... хмф...
+[Dialog]
+[charslot]
+[PlaySound(key="$d_avg_clothmovement")]
+[charslot(slot="m",name="avg_293_thorns_1#2$1",duration=1.5)]
+[Delay(time=2)]
+[name="Исидро"]*Вздыхает*...
+[charslot(slot="m",name="avg_npc_1586_1#4$1",focus="m")]
+[name="Странное существо"](Высовывает язык) Бле-е...
+[charslot(slot="m",name="avg_293_thorns_1#7$1",focus="m")]
+[name="Исидро"]Не лижи мне лицо, мелкий, а то получишь.
+[Dialog]
+[PlaySound(key="$d_avg_piratepet_vo02")]
+[charslot(slot="m",name="avg_npc_1586_1#4$1",focus="m")]
+[charslot(slot = "m", action="jump",power=50,times=1,duration = 0.5,isblock=true)]
+[name="Странное существо"]Мф-ф...
+[charslot(slot="m",name="avg_293_thorns_1#3$1",focus="m")]
+[name="Исидро"]Да ладно. Недолго мне с тобой возиться.
+[Dialog]
+[PlaySound(key="$dooropenquite")]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_293_thorns_1#3$1",focus="none")]
+[name="Грубый мужской голос"]Эй, chaval, вот твоя жрачка. Глотай быстрей! Босс хочет тебя видеть!
+[Dialog]
+[PlaySound(key="$doorclosequite")]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_293_thorns_1#6$1",focus="m")]
+[name="Исидро"]……
+[charslot(slot="m",name="avg_293_thorns_1#1$1",focus="m")]
+[name="Исидро"]Сегодня она меня не увидит.
+[Dialog]
+[PlaySound(key="$d_avg_clothmovement")]
+[Delay(time=2)]
+Исидро снимает холщовый гамак, подвешенный в комнате, и заворачивает в него чёрствый хлеб и наполовину пустую флягу с водой, что стояли на подносе.
+Затем он пинком открывает сундук у стены, и под ним обнаруживается тоннель.
+Он рыл его целую неделю.
+Странного вида зверёк подползает и вцепляется ему в штанину. Исидро смотрит, как его слюна впитывается в ткань, и вздыхает.
+[charslot(slot="m",name="avg_293_thorns_1#3$1",focus="m")]
+[name="Исидро"]Уж сюда я точно не вернусь.
+[Dialog]
+[PlaySound(key="$d_avg_clothmovementsp")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+[stopmusic(fadetime=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Background(image="57_g9_community_d",screenadapt="coverall")]
+[Delay(time=2)]
+[PlayMusic(intro="$path_intro", key="$path_loop", volume=0.6)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$d_avg_broadsword_polish",channel="1",volume=1,loop=true)]
+[PlaySound(key="$d_avg_crwddiscuss_outside",channel="2",volume=0.3,loop=true)]
+[charslot(slot="m",name="avg_npc_1579_1#1$2",duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1579_1#1$2",focus="none")]
+[name="Пылкая женщина"](Свистит) Хавьер, заберу клинок, что оставила тут в прошлом месяце?
+[Dialog]
+[charslot(slot="m",name="avg_npc_1579_1#1$2",focus="m")]
+[name="Хавьер"]……
+[Dialog]
+[charslot]
+[charslot(slot="m",name="avg_npc_1580_1#2$1",duration=1.5)]
+[Delay(time=2)]
+[CameraShake(duration=0.5, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=false)]
+[name="Пылкая женщина"]Хавьер!
+[Dialog]
+[StopSound(channel="1",duration=1.5)]
+[StopSound(channel="2",duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1579_1#8$2",focus="m")]
+[name="Хавьер"]А? О... Прости, Тич, задумался. Ты за клинком?
+[charslot(slot="m",name="avg_npc_1580_1#1$1",focus="m")]
+[name="Тич"]А за чем ещё? Уж точно не на твои потные грудки любоваться, это я тебе обещаю.
+[charslot(slot="m",name="avg_npc_1579_1#2$2",focus="m")]
+[name="Хавьер"]Хватит уже этих шуточек, Тич.
+[charslot(slot="m",name="avg_npc_1580_1#5$1",focus="m")]
+[name="Тич"]Ой, да брось. Ты с утра пораньше точишь ножи, это уже часть здешнего пейзажа.
+[name="Тич"]Гляди, целую толпу собрал... Хотя сомневаюсь, что они пришли наточить ножи.
+[Dialog]
+[charslot]
+[name="Наблюдающий мужчина"](Пялится) Эй, Хавьер!
+[charslot(slot="m",name="avg_npc_1579_1#9$2",focus="m")]
+[name="Хавьер"]Вот же морока... Держи. Твой клинок.
+[charslot(slot="m",name="avg_npc_1579_1#1$2",focus="m")]
+[name="Хавьер"]Металла на починку почти не осталось, так что я подлатал его другим. Придётся пока обойтись этим.
+[charslot(slot="m",name="avg_npc_1580_1#5$1",focus="m")]
+[name="Тич"]Ракушка и кость? А ты мастер на все руки.
+[charslot(slot="m",name="avg_npc_1579_1#1$2",focus="m")]
+[name="Хавьер"]Хочешь проверить?
+[charslot(slot="m",name="avg_npc_1580_1#1$1",focus="m")]
+[name="Тич"]Найдётся что-нибудь твёрдое, чтоб рубануть?
+[charslot(slot="m",name="avg_npc_1579_1#7$2",focus="m")]
+[name="Хавьер"]Был кусок сухого хлеба... но я только что отдал его пацану, запертому в сарае.
+[charslot(slot="m",name="avg_npc_1580_1#5$1",focus="m")]
+[name="Тич"]Перевод хорошего хлеба.
+[Dialog]
+[charslot]
+[PlaySound(key="$rungeneral")]
+[charslot(slot="m",name="avg_npc_1590_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[name="???"]Эй, эй, шевелитесь уже! У вас что, других дел с утра нет? Хватит торчать на дороге!
+[charslot(slot="m",name="avg_npc_1579_1#1$2",focus="m")]
+[name="Хавьер"]Рус?
+[charslot(slot="m",name="avg_npc_1580_1#5$1",focus="m")]
+[name="Тич"]А, это ты. А я-то думала, это рассвет так глаза режет.
+[charslot(slot="m",name="avg_npc_1590_1#4$1",focus="m")]
+[name="Рус"]Некогда мне с твоими глупостями. Быстрей, Хавьер, зайдём внутрь, потолкуем!
+[charslot(slot="m",name="avg_npc_1580_1#1$1",focus="m")]
+[name="Тич"]Похоже, это не для моих ушей. Тогда я пошла, Хавьер.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+[name="Наблюдающий мужчина"]Кажется, веселье кончилось... До завтра, Хавьер!
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1579_1#7$2",focus="m")]
+[name="Хавьер"](Тихо) Хм...
+[Dialog]
+[stopmusic(fadetime=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[charslot]
+[Background(image="57_g5_newcabin",screenadapt="coverall")]
+[Delay(time=2)]
+[PlayMusic(intro="$darkness02_intro", key="$darkness02_loop", volume=0.6)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$doorclosequite")]
+[Delay(time=2)]
+[charslot(slot="l",name="avg_npc_1590_1#4$1",focus="l")]
+[charslot(slot="r",name="avg_npc_1579_1#1$2",focus="l")]
+[name="Рус"]Тебе нужно поговорить с Хуаной. Она спятила! Она всех нас загонит в могилу, а ты единственный в её команде, кто умеет сохранять холодную голову!
+[charslot(slot="r",name="avg_npc_1579_1#2$2",focus="r")]
+[name="Хавьер"]И что в этом нового?
+[charslot(slot="r",name="avg_npc_1579_1#1$2",focus="r")]
+[name="Хавьер"]За все эти годы <i>каждое</i> её решение поначалу казалось безумным, но в итоге оказывалось именно тем, что нам было нужно, разве нет?
+[charslot(slot="r",name="avg_npc_1579_1#7$2",focus="r")]
+[name="Хавьер"]Связаться с тем караваном десять лет назад тоже было огромным риском, но вот мы здесь, живём неплохо, продавая древности, что выкапываем из солончака.
+[name="Хавьер"]Тогда никто не встал на её сторону. Все слишком боялись, что эти жадные до денег торгаши сдадут расположение нашего флота Инквизиции.
+[charslot(slot="r",name="avg_npc_1579_1#1$2",focus="r")]
+[name="Хавьер"]Но Хуана заставила их понять истинную ценность сделки и сделала им предложение, от которого они не смогли отказаться.
+[charslot(slot="l",name="avg_npc_1590_1#2$1",focus="l")]
+[name="Рус"]Это другое, Хавьер. Совсем другое.
+[charslot(slot="r",name="avg_npc_1579_1#2$2",focus="r")]
+[name="Хавьер"]Неважно, Рус. Она наш босс, и, по-моему, она заслужила наше доверие.
+[charslot(slot="l",name="avg_npc_1590_1#2$1",focus="l")]
+[name="Рус"]……
+[name="Рус"]Она хочет вывести нас обратно в море. Ты правда её в этом поддержишь? Ты <i>правда</i> думаешь, что это выход?
+[name="Рус"]Потому что нет. Мы все просто сгинем в водяной могиле.
+[charslot(slot="r",name="avg_npc_1579_1#8$2",focus="r")]
+[name="Хавьер"]Имей хоть немного веры. Она нашла компас и заклинателя, чтобы его починить. Всё идёт по плану, нет?
+[charslot(slot="l",name="avg_npc_1590_1#2$1",focus="l")]
+[name="Рус"]Даже если тебе плевать на всё, что творится за пределами твоей кухни, ты ведь заметил, какое рыбье дерьмо тебе в последнее время дают готовить, а?
+[Dialog]
+[PlaySound(key="$d_avg_paper1")]
+[Delay(time=1)]
+[name="Рус"]Вот, гляди, счета за древесину, что она скупает. Всё ради починки этих гнилых старых кораблей, всё ради возвращения в её драгоценное море.
+[Dialog]
+[PlaySound(key="$d_avg_paper1")]
+[Delay(time=1)]
+[name="Рус"]Ты <i>знаешь</i>, как дорога древесина. На все эти монеты мы могли бы жить куда уютнее. И ты бы не горбатился каждый день, засаливая печень солепёров на гарум, уж это точно.
+[name="Рус"]Просто сходи поговори с ней, покуда она не наделала слишком много бед.
+[name="Рус"]По городу ходят пренеприятные толки. Народ начинает волноваться.
+[charslot(slot="r",name="avg_npc_1579_1#1$2",focus="r")]
+[name="Хавьер"]……
+[name="Хавьер"]Ладно, потолкую с ней.
+[charslot(slot="r",name="avg_npc_1579_1#10$2",focus="r")]
+[name="Хавьер"]Но не забывай, Рус. Без этой 'loca' Хуаны ни наши деды, ни родители, ни мы сами...
+[charslot(slot="r",name="avg_npc_1579_1#2$2",focus="r")]
+[name="Хавьер"]Никто из нас не смог бы жить здесь, в Солончаке.
+[Dialog]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Background(image="57_g9_community_d",screenadapt="coverall")]
+[Delay(time=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot="m",name="avg_293_thorns_1#10$1",duration=1.5)]
+[Delay(time=2)]
+[name="Исидро"]Странно...
+[name="Исидро"]Куда подевался тот повар? Тот, что вечно сидит снаружи.
+[Dialog]
+[charslot]
+[PlaySound(key="$rungeneral")]
+[charslot(slot="m",name="avg_npc_1591_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_293_thorns_1#7$1")]
+[name="Исидро"]Mierda...
+[name="Исидро"]Они что, хотят вернуть меня обратно?
+[Dialog]
+[PlaySound(key="$d_avg_clothmovement")]
+[charslot(slot="m",posfrom="0,0",posto ="-50,0",duration = 1,isblock=false)]
+[charslot(slot="m",afrom=1,ato=0,duration=0.5,isblock=false)]
+[Delay(time=2)]
+[charslot]
+Из-за угла выходит мужчина, и в его шагах сквозит злость. Исидро быстро прячется в тёмном углу.
+Но мужчина проходит прямо мимо, на ходу осыпая всё вокруг бранью.
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Агрессивный мужчина"]Идиоты! Чёртовы идиоты!
+[name="Агрессивный мужчина"]Вот увидите, эта puta всех нас угробит!
+[Dialog]
+[charslot]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot="m",name="avg_npc_1580_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[name="Тич"]Проветри мозги, Сеск. Ты опять втихаря жевал травки той девчонки.
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"]Моя голова ясна как день, это за твою я переживаю!
+[name="Сеск"]Не могу же я быть единственным, кого не устраивает, как она нами командует?
+[name="Сеск"]Просто кишка у вас тонка сказать это вслух. Трусы вы все!
+[charslot(slot="m",name="avg_npc_1580_1#2$1",focus="m")]
+[name="Тич"]Vete a la mierda. Хочешь нести дерьмо, неси его дома.
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"]Но разве я не прав, Тич?!
+[name="Сеск"]Только не говори, что ты тоже веришь этой loca?!
+[name="Сеск"]Тебя тоже окрутила её солепроклятая ложь, как Хавьера?!
+[Dialog]
+[charslot]
+[PlaySound(key="$dooropenquite")]
+[charslot(slot="l",name="avg_npc_1590_1#1$1",duration=1.5)]
+[charslot(slot="r",name="avg_npc_1579_1#6$2",duration=1.5)]
+[delay(time=2)]
+[charslot(slot="r",name="avg_npc_1579_1#6$2",focus="r")]
+[name="Хавьер"]Сеск...
+[charslot(slot="l",name="avg_npc_1590_1#4$1",focus="l")]
+[name="Рус"]Эй, остынь! Он просто немного на взводе!
+[charslot(slot="r",name="avg_npc_1579_1#6$2",focus="r")]
+[name="Хавьер"]Повтори.
+[name="Хавьер"]Повтори. Ещё. Раз.
+[Dialog]
+[charslot]
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"]Ты знаешь, что я прав, Хавьер.
+[name="Сеск"]Столько лет лизал ей сапоги. Орал 'есть, капитан!' на любую её дурь.
+[name="Сеск"]Все знают, что ты верный клювозверь.
+[name="Сеск"]Так что убери свой ножик и беги плакаться к Mamá, как всегда.
+[charslot(slot="m",name="avg_npc_1579_1#6$2",focus="m")]
+[name="Хавьер"]Ты—!
+[Dialog]
+[charslot]
+[PlaySound(key="$d_avg_punch",channel="2")]
+[CameraShake(duration=0.5, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=true)]
+Хавьер хватает Сеска за ворот, вздёргивает его и впечатывает спиной в стену.
+Лицо Хавьера спокойно, но в глазах полыхает огонь, такой яркий, что, кажется, вот-вот прожжёт дыры в том, на кого направлен его гнев.
+[Dialog]
+[name="Исидро"]Они что, сейчас сцепятся...?
+[name="Исидро"]Если да, то самое время дать дёру.
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"]Кх...
+[charslot(slot="m",name="avg_npc_1579_1#6$2",focus="m")]
+[name="Хавьер"]Чтоб больше никогда не нёс такого рыбьего дерьма. Даже во сне.
+[name="Хавьер"]Ты меня слышишь, Сеск?
+[Dialog]
+[charslot]
+[PlaySound(key="$d_avg_cnstrctnck",channel="2")]
+[CameraShake(duration=0.5, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=true)]
+Сеск едва дышит под давлением руки Хавьера на горле. Никто не смеет подойти к ним, все молча проходят мимо, опустив головы.
+В лачугах вдоль улицы один за другим наглухо захлопываются ставни. В мгновение ока улица пустеет.
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"]Гх...
+[charslot(slot="m",name="avg_npc_1590_1#4$1",focus="m")]
+[name="Рус"]Отпусти его, Хавьер! Он усвоил урок!
+[charslot(slot="m",name="avg_npc_1580_1#1$1",focus="m")]
+[name="Тич"](Шёпотом) Не здесь, Хавьер...
+[charslot(slot="m",name="avg_npc_1579_1#3$2",focus="m")]
+[CameraShake(duration=0.3, xstrength=20, ystrength=20, vibrato=20, randomness=70, fadeout=true, block=false)]
+[name="Хавьер"]ОТВЕЧАЙ!
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"](Яростно кивает)
+[Dialog]
+[charslot]
+[PlaySound(key="$d_avg_clothmovement",channel="1")]
+[Delay(time=0.5)]
+[PlaySound(key="$bodyfalldown3",channel="2")]
+[CameraShake(duration=0.5, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=true)]
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[name="Сеск"]*кашляет*... *кашель* *кашель* *кашель*—!
+[charslot(slot="m",name="avg_npc_1579_1#6$2",focus="m")]
+[name="Хавьер"]А теперь беги домой, chaval. Запомни, чему сегодня научился. Запомни хорошенько.
+[Dialog]
+[charslot(slot="m",name="avg_npc_1591_1#1$1",focus="m")]
+[Delay(time=0.5)]
+[PlaySound(key="$rungeneral")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1580_1#4$1",focus="m")]
+[name="Тич"]*Вздыхает* Что это было, Хавьер? Ты никогда не был таким безрассудным.
+[charslot(slot="m",name="avg_npc_1590_1#1$1",focus="m")]
+[name="Рус"]Безрассудным? Нет. Он просто дал всем ясно понять, на чьей он стороне.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1579_1#9$2",focus="m")]
+[name="Хавьер"]Рус, я...
+[charslot(slot="m",name="avg_npc_1580_1#5$1",focus="m")]
+[name="Тич"]Расслабься, занеси ему вечером гостинец. Он примет твои извинения.
+[Dialog]
+[charslot(slot="m",name="avg_npc_1579_1#5$2",focus="m")]
+[Delay(time=1)]
+[name="Хавьер"]Да. Спасибо, Тич.
+[Dialog]
+[charslot(slot="m",name="avg_npc_1580_1#5$1",focus="m")]
+[Delay(time=2)]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1579_1#1$2",focus="m")]
+Хавьер стоит посреди улицы и смотрит вслед уходящей женщине.
+У его ног лежит оброненный платок, слетевший с головы Сеска, когда тот убегал.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+Хавьер поднимает его, стряхивает пыль и возвращается в свою лачугу, тихо притворив за собой дверь.
+[Dialog]
+[PlaySound(key="$doorclosequite")]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_293_thorns_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[name="Исидро"]Хорошо, все разошлись.
+[charslot(slot="m",name="avg_293_thorns_1#6$1",focus="m")]
+[name="Исидро"]Я уж боялся, придётся ждать, пока они все улягутся на сиесту.
+[charslot(slot="m",name="avg_293_thorns_1#7$1",focus="m")]
+[name="Исидро"]Цк...
+[name="Исидро"]И зачем я в прошлый раз вообще <i>пытался</i> сбежать ночью? Как раз ночью эти ребята активнее всего.
+[Dialog]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Background(image="57_g6_olddeck_1",screenadapt="coverall")]
+[Delay(time=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[charslot(slot="l",name="avg_npc_1589_1#1$1",duration=1.5)]
+[charslot(slot="r",name="avg_npc_1592_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="none")]
+[name="Исидро"](Вот он. Мой путь наружу. Надо только спуститься.)
+[name="Исидро"](Всего двое охранников. Надо их вырубить.)
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]Кхм...
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="none")]
+[name="Исидро"](Хм...?)
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]Слушай, Анна... Ты не думала перебраться куда-нибудь?
+[name="Невнимательный страж"]Я приберёг кое-какие из тех старых монет, что мы выкапываем. Сточишь королевский профиль, и их почти не отличить от новых!
+[name="Невнимательный страж"]Мы могли бы оставить Солончак позади. Уехать в Рим-Биллитон, Колумбию... Куда захочешь.
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="l")]
+[name="Усердный страж"]Нет, Хосе. Я тут родилась и выросла. Даже не думала уезжать.
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]Ты правда хочешь остаться и пойти за боссом в море?
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="l")]
+[name="Усердный страж"]Она босс.
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]Море тебя проглотит...
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="l")]
+[name="Усердный страж"]Я не боюсь. Она нам обещала.
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]А <i>меня</i> пугает, что это обещание может обернуться мимолётным сном.
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="l")]
+[name="Усердный страж"]Если так боишься, уходи. Я тебя держать не стану.
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]...А я вроде как надеялся, что станешь.
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="none")]
+[name="Исидро"](Они уже закончили?)
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]Если не хочешь уезжать со мной, то хотя бы...
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="l")]
+[name="Усердный страж"]Хотя бы что?
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="none")]
+[name="Исидро"](Этот парень совсем намёков не понимает?)
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="r")]
+[name="Невнимательный страж"]Может, ты, э-э, дашь мне...
+[charslot(slot="r",name="avg_npc_1592_1#1$1",focus="none")]
+[name="Исидро"](Хватит мямлить, выкладывай уже—)
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="l")]
+[name="Усердный страж"]Хватит мямлить, выкладывай уже!
+[stopmusic(fadetime=1.5)]
+[charslot(slot="l",name="avg_npc_1589_1#1$1",focus="none")]
+[name="Исидро"](...?)
+[Dialog]
+[PlayMusic(intro="$farce_intro", key="$farce_loop", volume=0.6)]
+[charslot(slot="l",posfrom="0,0", posto="100,0", afrom=1, ato=0, duration=0.5, isblock=false)]
+[charslot(slot="r",posfrom="0,0", posto="50,0", afrom=1, ato=0, duration=0.5, isblock=false)]
+[PlaySound(key="$bodyfalldown1",channel="2")]
+[Delay(time=0.4)]
+Не в силах больше смотреть, как мужчина запинается на каждом слове, женщина сбивает его с ног, сжимает его лицо в ладонях и крепко целует.
+Исидро хмурится и вежливо отводит взгляд.
+[Dialog]
+[PlaySound(key="$d_avg_clothmovement",channel="1")]
+[CameraShake(duration=0.5, xstrength=10, ystrength=10, vibrato=20, randomness=70, fadeout=true, block=true)]
+[name="Невнимательный страж"]Ммф... Анна...
+[name="Усердный страж"]Ой, да помолчи уже!
+[Dialog]
+[Delay(time=1)]
+[charslot(slot = "m",name="avg_293_thorns_1#10$1",posfrom="-200,0", posto="0,0", afrom=0, ato=1, duration=1.5, isblock=true)]
+[name="Исидро"]……
+[name="Исидро"](Хотя бы меня не заметили.)
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot = "m", posfrom="0,0", posto="200,0", afrom=1, ato=0, duration=2.5, isblock=true)]
+[stopmusic(fadetime=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Background(image="57_g1_saltdesert_d",screenadapt="coverall")]
+[Delay(time=2)]
+[PlayMusic(intro="$m_dia_street_intro", key="$m_dia_street_loop", volume=0.6)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$runsand")]
+[charslot(slot = "m",name="avg_293_thorns_1#1$1",posfrom="-200,0", posto="0,0", afrom=0, ato=1, duration=1.5, isblock=true)]
+[name="Исидро"]Фух...
+[name="Исидро"]Надо бежать быстрее... Если не выберусь отсюда до темноты...
+[name="Исидро"]Судя по прошлым разам, меня точно—
+[Dialog]
+[PlaySound(key="$d_avg_explosion_stone")]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=1, g=1, b=1, fadetime=0.05, block=true)]
+[charslot(slot = "m",posfrom="0,0", posto="-50,0", afrom=1, ato=0, duration=0.5, isblock=false)]
+[CameraShake(duration=0.5, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=false)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+Огромный штурвал прокатывается у самого его лица и замирает, едва не раздавив ему ноги.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot="m",name="avg_npc_1581_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[name="???"]Нехорошо заставлять даму ждать, знаешь ли.
+[name="???"]А теперь будь хорошим мальчиком и пойдём со мной.
+[charslot(slot="m",name="avg_293_thorns_1#7$1",focus="m")]
+[name="Исидро"]Тебя здесь быть не должно.
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="???"]Всё ещё не сдался после стольких попыток? Учти, у нас может не хватить запасных лекарств, чтобы залатать тебя, если снова поранишься.
+[charslot(slot="m",name="avg_293_thorns_1#7$1",focus="m")]
+[name="Исидро"]Откуда ты узнала, что я сбежал, señora Хуана?
+[name="Исидро"]Я убедился, что за мной никто не следит.
+[charslot(slot="m",name="avg_npc_1581_1#10$1",focus="m")]
+[name="Хуана"]Знать обо всём, что творится в моём флоте, это моя работа. От моих глаз и ушей не спрятаться.
+[name="Хуана"]К тому же, разве тебя не учили не задавать даме вопросов, на которые она предпочла бы не отвечать?
+[charslot(slot="m",name="avg_293_thorns_1#7$1",focus="m")]
+Юноша не отвечает, молча вспоминая о мече, что годами верно служил ему. Будь он сейчас при нём, возможно, шансы бы уравнялись.
+Но меч раскололся. Как и свобода, что сейчас была на расстоянии вытянутой руки, он погиб в этих солончаках, переломленный надвое.
+Исидро сжимает кулак, стискивает зубы и хватается за то немногое, что осталось от его пожитков.
+Женщина легко выхватывает меч, держась расслабленно.
+[charslot(slot="m",name="avg_293_thorns_1#5$1",focus="m")]
+[name="Исидро"]Прочь с дороги!
+[Dialog]
+[PlaySound(key="$runsand")]
+[charslot(slot = "m",posfrom="0,0", posto="-200,0", afrom=1, ato=0, duration=1.5, isblock=true)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[PlaySound(key="$d_avg_punch02",channel="2")]
+[Delay(time=0.2)]
+[PlaySound(key="$d_avg_punchsp3",channel="1")]
+[Delay(time=0.2)]
+[PlaySound(key="$d_avg_punch",channel="3")]
+[Delay(time=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$bodyfalldown1",channel="2")]
+[CameraShake(duration=0.5, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=true)]
+[name="Исидро"]Нгх—
+[Dialog]
+[PlaySound(key="$d_avg_throwrope",channel="1")]
+[Delay(time=1)]
+[CameraShake(duration=0.3, xstrength=15, ystrength=15, vibrato=20, randomness=70, fadeout=true, block=false)]
+[PlaySound(key="$d_avg_cnstrctnck",channel="1")]
+[Delay(time=1.5)]
+После нескольких ударов мечом безоружный юноша падает побеждённым, лицом в солёный песок. Он не сумел уберечь даже последние свои вещи.
+Пока Хуана связывает его и взваливает на плечо, он чувствует, как что-то внутри тихо разбивается.
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Ах, молодость. Никогда не знает, когда остановиться. Сколько бы раз тебя ни сбивали с ног, ты уже мечтаешь о следующей попытке.
+[name="Хуана"]Раз тебе так отчаянно хочется уйти, тогда почини мне тот компас.
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="none")]
+[name="Исидро"]Сколько раз повторять? Починить его может только алхимик, а я не алхимик!
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Вот как? Тогда, может, объяснишь, откуда у тебя та золотая монета?
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="none")]
+[name="Исидро"]...Я её украл.
+[charslot(slot="m",name="avg_npc_1581_1#2$1",focus="m")]
+[name="Хуана"]Лжец из тебя никудышный, joven.
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]На её лицевой стороне знак, известный лишь немногим: знак давно сгинувшей школы алхимии. Знания, что они передавали, помогли бесчисленным флотам отыскать сокровища в морях.
+[name="Хуана"]Но после Глубокого Безмолвия их учеников бросили в темницы, а труды уничтожили.
+[name="Хуана"]Так скажи мне, почему ты держишься за эту монету, несмотря на всё, что с ними случилось?
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="none")]
+[name="Исидро"]……
+[name="Исидро"]Я ничего об этом не знаю.
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Ох, какой упрямый юноша. Тогда, может, сменим вопрос?
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="none")]
+[name="Исидро"]……
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Как ты прокопал свой тоннель?
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="none")]
+[name="Исидро"]...Хлеб, что ты мне давала, был очень твёрдым.
+[charslot(slot="m",name="avg_npc_1581_1#3$1",focus="m")]
+[name="Хуана"]Какой смышлёный мальчик.
+[Dialog]
+[stopmusic(fadetime=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Background(image="57_g5_newcabin",screenadapt="coverall")]
+[Delay(time=2)]
+[PlayMusic(key="$comedy_loop", volume=0.6)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Ах-ах, мне непременно нужно тебя поблагодарить!
+[name="Хуана"]Ты так усердно за ним приглядывал. Если бы ты не доложил мне сразу, он мог бы и впрямь улизнуть.
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Да-да, знаю, узник из него не самый послушный, но на то у нас есть ты, верно?
+[name="Хуана"]Ты и правда наш самый умный, самый смекалистый, самый чудесный маленький...
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Нене.
+[Dialog]
+[charslot]
+[charslot(slot="m",name="avg_npc_1586_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[name="Нене"]Мм-ф!
+[name="Нене"](Возбуждённо кружится)
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Только не слишком увлекайся. Впереди у тебя ещё много трудных поручений, и относиться к ним легкомысленно нельзя.
+[charslot(slot="m",name="avg_npc_1586_1#1$1",focus="m")]
+[name="Нене"](Тут же плашмя падает на землю)
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Я в тебя, конечно, верю. Что ж, теперь ступай. И не позволяй тому мальчишке узнать, кто ты.
+[charslot(slot="m",name="avg_npc_1586_1#1$1",focus="m")]
+[name="Нене"]Мф!
+[Dialog]
+[charslot]
+[stopmusic(fadetime=2)]
+[PlaySound(key="$doorknockquite",channel="2")]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Заходи, Хави.
+[Dialog]
+[charslot]
+[PlaySound(key="$dooropenquite")]
+[PlayMusic(intro="$m_dia_street_intro", key="$m_dia_street_loop", volume=0.6)]
+[charslot(slot="m",name="avg_npc_1579_1#1$1",duration=1.5)]
+[delay(time=2)]
+[name="Хавьер"]Прошу прощения, señora Хуана. Надеюсь, я не помешал вашему времени с Нене.
+[charslot(slot="m",name="avg_npc_1586_1#2$1",focus="m")]
+[name="Нене"]Мф...
+[charslot(slot="m",name="avg_npc_1579_1#8$1",focus="m")]
+[name="Хавьер"]Не смотри на меня так. У меня и для тебя кое-что припасено.
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Ого, какой славный костяной шарик... Сам вырезал?
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[name="Хавьер"]Sí. Из костяных осколков, что откололись от нашего старого оружия. Иначе пропали бы зря.
+[name="Хавьер"]Хотел подарить его Русу в знак примирения, но он не открывает мне дверь.
+[charslot(slot="m",name="avg_npc_1581_1#10$1",focus="m")]
+[name="Хуана"]О... Я слышала об этом. Не стоит быть таким поспешным, Хавьер. Как боцман нашего флота, Рус имеет полное право сомневаться в моём плане выйти в море.
+[name="Хуана"]А то, что ты напал на одного из его людей прямо у него на глазах, можно расценить как довольно суровое предупреждение.
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Учитывая твоё недавнее повышение до главного повара, лучше не высовывайся. Иные вещи лучше оставить несказанными.
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[name="Хавьер"]По-моему, этот совет нужен скорее <i>ему</i>.
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Просто оставь его в покое, Хави. Я не придаю этому значения, так зачем тебе?
+[charslot(slot="m",name="avg_npc_1579_1#2$1",focus="m")]
+[name="Хавьер"]Потому что я знаю: наш босс не сумасшедшая, что играет чужими жизнями.
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Ну разве ты не милашка?
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[name="Хавьер"]Если мы и впрямь починим этот компас, он правда подскажет, как обойти морских чудовищ и найти то, что нам нужно?
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Конечно. Я бы никогда тебе не солгала, Хави.
+[charslot(slot="m",name="avg_npc_1581_1#10$1",focus="m")]
+[name="Хуана"]Солончак не сможет кормить нас вечно, из поколения в поколение. А море почти неиссякаемый источник ресурсов.
+[name="Хуана"]Теперь, когда у нас есть и 'компас', и алхимик, способный его починить, это наш шанс изменить жизнь к лучшему. Упустить его мы не вправе.
+[charslot(slot="m",name="avg_npc_1579_1#9$1",focus="m")]
+[name="Хавьер"]Но, кроме тебя, никто из нас даже не видел моря и не застал того золотого века изобилия.
+[name="Хавьер"]Я живу в Солончаке, сколько себя помню, но старый повар говорил, что всего век назад здесь была плодородная земля.
+[name="Хавьер"]А что, если твоё щедрое море уже стало таким же бесплодным, как Солончак после Глубокого Безмолвия?
+[charslot(slot="m",name="avg_npc_1579_1#2$1",focus="m")]
+[name="Хавьер"]И этот твой волшебный компас... не вернёт нас в прошлое.
+[charslot(slot="m",name="avg_npc_1581_1#2$1",focus="m")]
+[name="Хуана"]«Приливы смоют мои следы, а ветер сотрёт пену с волн.»
+[name="Хуана"]«Но море и берег пребудут вовеки.»
+[charslot(slot="m",name="avg_npc_1579_1#9$1",focus="m")]
+[name="Хавьер"]Что...?
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Просто старое стихотворение, Хави. В отличие от земли, море живуче. Пусть оно и кишит тварями со странной плотью, оно всё ещё полно драгоценных даров жизни, что ждут, когда мы их отыщем.
+[name="Хуана"]Когда-то оно было нашим и может стать нашим снова.
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[name="Хавьер"]Я хочу тебе верить, правда хочу.
+[name="Хавьер"]Но эти слухи... Тебе нужно доказать всем, показать, что ты не несёшь чепухи.
+[charslot(slot="m",name="avg_npc_1581_1#10$1",focus="m")]
+[name="Хуана"]Докажу.
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[name="Хавьер"]……
+[name="Хавьер"]Ах да. Я сделал, как ты просила, и заглянул в сарай. Там и правда дыра. Сегодня вечером её засыплю.
+[name="Хавьер"]Что будем делать с мальчишкой? Ему больше нельзя там оставаться.
+[charslot(slot="m",name="avg_npc_1581_1#1$1",focus="m")]
+[name="Хуана"]Не волнуйся, я уже нашла ему место.
+[charslot(slot="m",name="avg_npc_1579_1#9$1",focus="m")]
+[name="Хавьер"]Но где? Если ты про мой дом, то нет.
+[charslot(slot="m",name="avg_npc_1581_1#11$1",focus="m")]
+[name="Хуана"]Не забивай себе этим голову. Увидишь по дороге домой.
+[Dialog]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Background(image="57_g9_community_d",screenadapt="coverall")]
+[Delay(time=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$d_avg_crwddiscuss_outside",channel="2",volume=0.3,loop=true)]
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]Чёртова мелкая паршивка, этот деревянный протез, что ты мне впарила, полный хлам! Два дня прошло, а он уже раскололся надвое!
+[Dialog]
+[charslot]
+[Delay(time=1)]
+[charslot(slot="m",name="avg_4163_rosesa_1#5$1",duration=1.5)]
+[delay(time=2)]
+[name="Хитрый торговец"]Э-э, его всего-то нужно поплевать, отполировать да подклеить, и будет как новенький.
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]Ах ты мешок рыбьего дерьма, а может, я оторву <i>твою</i> ногу и приставлю вместо этой?!
+[charslot(slot="m",name="avg_4163_rosesa_1#3$1",focus="m")]
+[name="Хитрый торговец"]Э-эй, успокойся! Я заберу протез обратно, не надо рук распускать!
+[name="Хитрый торговец"]У-у меня нож! Не подходи!
+[Dialog]
+[charslot]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot="m",name="avg_npc_1579_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]Хавьер! Как раз вовремя! Помоги поймать эту маленькую дрянь!
+[charslot(slot="m",name="avg_4163_rosesa_1#16$1",focus="m")]
+[name="Хитрый торговец"]Прочь с дороги, идиот!
+[charslot(slot="m",name="avg_npc_1579_1#2$1",focus="m")]
+[name="Хавьер"]Цк... Смутьянка.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot="m",posfrom="0,0",posto ="-50,0",duration = 1.5,isblock=false)]
+[charslot(slot="m",afrom=1,ato=0,duration=1,isblock=false)]
+[Delay(time=2)]
+[StopSound(channel="2",fadetime=2)]
+[Blocker(a=0, r=255,g=255, b=255, fadetime=0, block=true)]
+[Blocker(a=1, r=255,g=255, b=255, fadetime=0.03, block=true)]
+[CameraShake(duration=0.5, xstrength=40, ystrength=40, vibrato=30, randomness=90, fadeout=true, block=false)]
+[PlaySound(key="$fightgeneral", volume=1)]
+[Blocker(a=0, r=255,g=255, b=255, fadetime=0.5, block=true)]
+[delay(time=0.5)]
+[charslot(slot="l",name="avg_4163_rosesa_1#19$1",duration=1.5)]
+[charslot(slot="r",name="avg_npc_1579_1#1$1",duration=1.5)]
+[delay(time=2)]
+[charslot(slot="l",name="avg_4163_rosesa_1#19$1",focus="l")]
+[charslot(slot="r",name="avg_npc_1579_1#1$1",focus="l")]
+[name="Хитрый торговец"]Ай! Больно!
+[charslot(slot="r",name="avg_npc_1579_1#1$1",focus="r")]
+[name="Хавьер"]Верни ему деньги.
+[charslot(slot="l",name="avg_4163_rosesa_1#15$1",focus="l")]
+[name="Хитрый торговец"]Отпусти! Я расскажу Хуане, что ты меня обижаешь!
+[charslot(slot="r",name="avg_npc_1579_1#2$1",focus="r")]
+[name="Хавьер"]Включи голову, chica. Здесь не то место, где можно трепать языком. Мы не чета тем трусам из других городов.
+[charslot(slot="r",name="avg_npc_1579_1#1$1",focus="r")]
+[name="Хавьер"]Если станешь нам перечить, мы не будем возиться с темницей или судом. Левая рука или правая? Выбирай, какую хочешь сохранить.
+[charslot(slot="l",name="avg_4163_rosesa_1#14$1",focus="l")]
+[name="Хитрый торговец"]Д-да как ты смеешь! Если бы не я, твой босс никогда бы не заполучила тот компас!
+[charslot(slot="r",name="avg_npc_1579_1#1$1",focus="r")]
+[name="Хавьер"]Хочешь испытать удачу?
+[charslot(slot="l",name="avg_4163_rosesa_1#19$1",focus="l")]
+[name="Хитрый торговец"]Э-э... Ладно, верну деньги! Но вы отдайте мне тот протез!
+[Dialog]
+[charslot]
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]Ни за что. Раз он прирос к моей ноге, значит, он мой.
+[Dialog]
+[charslot]
+[charslot(slot="r",name="avg_npc_1579_1#1$1",focus="l")]
+[charslot(slot="l",name="avg_4163_rosesa_1#19$1",focus="l")]
+[name="Хитрый торговец"]Д-да вы не лучше шайки разбойников!
+[charslot(slot="r",name="avg_npc_1579_1#2$1",focus="r")]
+[name="Хавьер"]Рад, что ты наконец дала нам верную оценку, señorita.
+[charslot(slot="l",name="avg_4163_rosesa_1#3$1",focus="l")]
+[name="Хитрый торговец"]Ха-ха... Просто оговорка... Вот, деньги. И, э-э, adios.
+[Dialog]
+[PlaySound(key="$rungeneral")]
+[charslot(slot="l",posfrom="0,0", posto="-200,0", afrom=1, ato=0, duration=1.5, isblock=false)]
+[Delay(time=3)]
+[charslot]
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]О чём только думал босс, пуская такую подлую девчонку в нашу команду?
+[charslot(slot="m",name="avg_npc_1579_1#2$1",focus="m")]
+[name="Хавьер"]У неё свои причины.
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]Слыхал, тот пацан снова сбежал. Почему просто не переломать ему ноги и не покончить с этим?
+[name="Разгневанный мужчина"]А теперь она вздёрнула его тут и велела не трогать ни волоска на его голове. Эта его кислая рожа меня просто бесит. Ты не представляешь, как мне хочется врезать по ней.
+[Dialog]
+[charslot(slot="m",name="avg_npc_1579_1#2$1",focus="m")]
+[Delay(time=1.5)]
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[Delay(time=1.5)]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1592_1#1$1",focus="m")]
+[name="Разгневанный мужчина"]Эй, не уходи, Хавьер! Я просто размышлял вслух!
+[name="Разгневанный мужчина"]Эй!
+[Dialog]
+[stopmusic(fadetime=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[Dialog]
+[charslot]
+[Delay(time=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[PlaySound(key="$d_avg_crwddiscuss_outside",channel="1",loop=true,volume=0.5)]
+[PlaySound(key="$d_gen_walk_n")]
+[charslot(slot="m",name="avg_npc_1579_1#1$1",duration=1.5)]
+[Delay(time=2)]
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="none")]
+[name="Исидро"]……
+[charslot(slot="m",name="avg_npc_1579_1#10$1",focus="m")]
+[name="Хавьер"]Ты весь день носился. Воды хочешь?
+[charslot(slot="m",name="avg_npc_1579_1#10$1",focus="none")]
+[name="Исидро"]……
+[charslot(slot="m",name="avg_npc_1579_1#1$1",focus="m")]
+[name="Хавьер"]Что, облакозверь язык откусил?
+[Dialog]
+[StopSound(channel="1",fadetime=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=2, block=true)]
+[charslot]
+[Image(image="57_i01",xScale=2.5, yScale=2.5,y=-130,screenadapt="coverall")]
+[imagerotate(angle=180,fadetime=0,block = false)]
+[PlayMusic(key="$comedy_loop", volume=0.6)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+[Delay(time=1)]
+[name="Исидро"]……
+[name="Исидро"]Я вам не сдамся.
+[name="Хавьер"]Как знаешь, chaval.
+[name="Хавьер"]Я лишь пришёл сообщить дурную весть. Боюсь, проторчишь тут вот так всю ночь.
+[name="Исидро"]...Да плевать. Мне всё равно.
+[name="Хавьер"]Рад слышать.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[Delay(time=2)]
+[name="Исидро"]……
+[Dialog]
+[Blocker(a=1, r=0, g=0, b=0, fadetime=3.5, block=true)]
+[imagerotate(angle=0,fadetime=0,block = true)]
+[ImageTween(xFrom=0, yFrom=-130, xTo=0, yTo=0, xScaleFrom=2, yScaleFrom=2, xScaleTo=1, yScaleTo=1, duration=35, block=false)]
+[name="Исидро"]……
+[name="Исидро"]………
+[Dialog]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=3.5, block=true)]
+[Delay(time=2)]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=0.7, r=0, g=0, b=0, fadetime=2, block=true)]
+Рассветный свет падает на монету, и случайный луч отражается на веко Исидро, заставляя его моргнуть. Свет скользит, и круглый знак на монете начинает идти рябью.
+Ему становится не по себе, и он протягивает монету мужчине на берегу, но тот не спешит её брать. Вместо этого он хватает Исидро за ноги и поднимает вниз головой.
+Мальчик барахтается, и мужчина на берегу заговаривает:
+[Dialog]
+[Subtitle(text="«Если тебе некуда идти, мой юный друг, можешь пойти со мной.»", x=300, y=370, alignment="center", size=24, delay=0.04, width=700)]
+[Subtitle(text="«Меня зовут Аулус, и я благодарен тебе за то, что нашёл мою монету.»", x=300, y=370, alignment="center", size=24, delay=0.04, width=700)]
+[subtitle]
+[Blocker(a=0, r=0, g=0, b=0, fadetime=2, block=true)]
+Лучи заходящего солнца просачиваются сквозь щели в каркасе солевого корабля и падают на веко Исидро. Он недовольно моргает.
+Мимо проходят люди, и никто не может удержаться, чтобы не хмыкнуть над ним.
+У него слегка кружится голова. От тихого смеха его щёки заливает румянец, хотя, возможно, дело лишь в том, что он висит вниз головой.
+Здесь, в Солончаке, один за другим стоят простые шатры и ветхие лачуги.
+По обе стороны дороги пришвартованы огромные солевые корабли, точно стадо спящих морских зверей.
+На их мачтах висят большие мешки для сбора дождевой воды, хлопая на ветру в ожидании облаков, что проплывут над головой.
+По дороге люди идут плечом к плечу, смеясь и переругиваясь, пока вдруг не вспыхивает ссора, что вскоре перерастает в беспорядочную всеобщую потасовку.
+А в углах потише кое-кто притягивает к себе возлюбленных для жаркого поцелуя.
+[Dialog]
+[PlaySound(key="$d_gen_walk_n")]
+[Delay(time=2)]
+[name="Хитрый торговец"]Эти ребята и впрямь сборище варваров.
+[name="Хитрый торговец"]И зачем меня только занесло в такое паршивое место?
+[name="Исидро"]Хороший вопрос, Паскуала. А как <i>я</i> очутился в этом воровском логове?
+[name="Паскуала"]*Кашель* *Кашель*
+[name="Паскуала"]Сама толком не знаю...
+[Dialog]
+[Blocker(a=0, r=0,g=0, b=0, fadetime=0, block=true)]
+[Blocker(a=1, r=0,g=0, b=0, fadetime=2, block=true)]
+[stopmusic(fadetime=2)]
+[charslot]
+[Background]
+[Image]
