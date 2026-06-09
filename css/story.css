@@ -883,12 +883,26 @@ html {
 /* ============================================================
    ФОН ВО ВЕСЬ ЭКРАН: убираем серые поля, кинематографичная рамка
    ============================================================ */
-/* размытая подложка теперь во всю ширину экрана и чуть темнее */
+/* размытая подложка: вернул в ширину сцены и растворяю края так же, как у резкого слоя */
 .scene:before {
-  width: 100vw;
-  left: 50%;
-  transform: translateX(-50%) scale(1.04);
+  width: 100%;
+  left: 0;
+  transform: scale(1.02);
   filter: blur(16px) brightness(0.68);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
 }
 /* мягкая виньетка в полях: градиент-база вместо плоского цвета (только на странице историй) */
 body {
@@ -899,20 +913,20 @@ body {
     #06070a 100%
   );
 }
-/* края кадра растворяются в фоне слева и справа (мягкий градиент) */
+/* края резкого кадра растворяются в фоне слева и справа */
 .scene-background {
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    #000 13%,
-    #000 87%,
+    #000 14%,
+    #000 86%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
     transparent 0%,
-    #000 13%,
-    #000 87%,
+    #000 14%,
+    #000 86%,
     transparent 100%
   );
   box-shadow: none;
