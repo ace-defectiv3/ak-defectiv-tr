@@ -827,3 +827,55 @@ html {
 .cgitem {
   position: absolute;
 }
+
+/* ============================================================
+   СТИЛЬ БАББЛОВ: «тёмное стекло»
+   (добавлено поверх исходных правил; ниже = главнее)
+   ============================================================ */
+#storyDisp .text {
+  background: rgba(16, 20, 28, 0.5);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+  backdrop-filter: blur(12px) saturate(125%);
+  border: 1px solid rgba(185, 205, 235, 0.14);
+  border-radius: 0.85em;
+  padding: 0.55em 0.85em 0.65em 0.85em;
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.38);
+  line-height: 1.45;
+}
+/* имя говорящего: тот же акцентный цвет, но собраннее */
+#storyDisp .text:not([data-name=""]) .dialog-name {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-size: 0.78em;
+  margin-bottom: 0.3em;
+  margin-left: 0;
+  opacity: 0.95;
+}
+/* плашка-нарратив (закадровый текст, без имени): чуть мягче */
+#storyDisp .text[data-name=""] {
+  background: rgba(12, 15, 22, 0.42);
+}
+/* аватарка — под то же стекло */
+#storyDisp .avatar {
+  border-radius: 0.7em;
+  border: 1px solid rgba(185, 205, 235, 0.18);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+/* кнопки выбора — тоже стеклянные, с ховером */
+#storyDisp .decision {
+  background: rgba(20, 26, 36, 0.45);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(185, 205, 235, 0.2);
+  border-radius: 0.6em;
+  padding: 0.4em 0.65em;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+#storyDisp .decision:hover {
+  background: rgba(42, 54, 74, 0.6);
+  border-color: rgba(185, 205, 235, 0.4);
+}
+#storyDisp .decision.selected {
+  background: rgba(120, 140, 175, 0.55);
+  color: #fff;
+}
