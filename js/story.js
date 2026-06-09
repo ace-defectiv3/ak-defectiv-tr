@@ -715,14 +715,14 @@ async function genStory(data, avatars = []) {
     return await (
         key.startsWith("uniequip")
             ? getModuleStory(key)
-            : fetch(`${DATA_BASE[serverString]}/gamedata/story/${key}.txt`)
+            : fetch(`../gamedata/${serverString}/story/${key}.txt`)
     )
         .then((r) => {
             if (!r.ok) {
-                // story txt is missing (potentially old story that was deleted)
+                // нет локального перевода — берём английский оригинал с внешнего источника
                 return fetch(
-                    `../gamedata/${serverString}/story/${key}.txt`,
-                ).then((t) => (t.ok ? t.text() : r.text()));
+                    `${DATA_BASE[serverString]}/gamedata/story/${key}.txt`,
+                ).then((t) => t.text());
             }
             return r.text();
         })
