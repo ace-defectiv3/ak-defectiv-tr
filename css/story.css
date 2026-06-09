@@ -899,10 +899,21 @@ body {
     #06070a 100%
   );
 }
-/* резкий кадр как обрамлённая картина: тонкий кантик + глубокая тень + холодное свечение */
+/* края кадра растворяются в фоне слева и справа (мягкий градиент) */
 .scene-background {
-  box-shadow:
-    0 0 0 1px rgba(190, 205, 230, 0.1),
-    0 18px 70px rgba(0, 0, 0, 0.6),
-    0 0 90px rgba(70, 95, 140, 0.1);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 13%,
+    #000 87%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 13%,
+    #000 87%,
+    transparent 100%
+  );
+  box-shadow: none;
 }
