@@ -20,8 +20,10 @@
   // --- позиционирование спрайтов (можно крутить) ---
   var SLOT_X = { left: 30, center: 50, right: 70 }; // базовый X слота, % ширины кадра
   var REF_W = 1920, REF_H = 1080; // опорное разрешение для пиксельных сдвигов posto
-  var REF_CANVAS_H = 1024; // холст этого размера показывается на высоту BASE_H; больше холст -> выше персонаж
-  var BASE_H = 128;   // базовая высота для холста REF_CANVAS_H, % высоты кадра
+  var REF_CANVAS_H = 1024; // эталонный размер холста (даёт высоту BASE_H)
+  var BASE_H = 128;   // базовая высота для эталонного холста, % высоты кадра
+  var CANVAS_INFLUENCE = 0.3; // 0 = у всех одинаковый рост; 1 = строго по размеру холста (перебор)
+  var SIZE_MIN = 0.9, SIZE_MAX = 1.12; // потолок и пол множителя, чтобы никто не раздувался
   var BASE_BOTTOM = -42; // насколько низ холста уходит за нижний край, %
   var spriteNatH = {}; // родная высота холста спрайта в пикселях (из предзагрузки)
 
@@ -467,7 +469,9 @@
       }
       var xPct = SLOT_X[slot] + (sp.x / REF_W) * 100;
       var natH = spriteNatH[sp.name] || REF_CANVAS_H;
-      var h = (natH / REF_CANVAS_H) * BASE_H * (sp.scale || 1);
+      var sizeFactor = 1 + CANVAS_INFLUENCE * (natH / REF_CANVAS_H - 1); // мягкое влияние размера холста
+      sizeFactor = Math.min(SIZE_MAX, Math.max(SIZE_MIN, sizeFactor)); // с потолком и полом
+      var h = BASE_H * sizeFactor * (sp.scale || 1);
       var b = BASE_BOTTOM + (sp.y / REF_H) * 100;
       img.style.left = xPct + "%";
       img.style.height = h + "%";
