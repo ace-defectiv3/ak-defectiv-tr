@@ -20,8 +20,10 @@
   // --- позиционирование спрайтов (можно крутить) ---
   var SLOT_X = { left: 30, center: 50, right: 70 }; // базовый X слота, % ширины кадра
   var REF_W = 1920, REF_H = 1080; // опорное разрешение для пиксельных сдвигов posto
-  var BASE_H = 128;   // базовая высота спрайта, % высоты кадра (как --vn-sp-h)
+  var REF_CANVAS_H = 1024; // холст этого размера показывается на высоту BASE_H; больше холст -> выше персонаж
+  var BASE_H = 128;   // базовая высота для холста REF_CANVAS_H, % высоты кадра
   var BASE_BOTTOM = -42; // насколько низ холста уходит за нижний край, %
+  var spriteNatH = {}; // родная высота холста спрайта в пикселях (из предзагрузки)
 
   // ---------- состояние ----------
   var frames = [];
@@ -282,8 +284,8 @@
     return new Promise(function (resolve) {
       var i = 0;
       var im = new Image();
-      im.onload = function () { resolve(im.src); };
-      im.onerror = function () { i++; if (i < urls.length) im.src = urls[i]; else resolve(null); };
+      im.onload = function () { resolve({ url: im.src, h: im.naturalHeight }); };
+      im.onerror = function () { i++; if (i < urls.length) im.src = urls[i]; else resolve({ url: null, h: 0 }); };
       im.src = urls[0];
     });
   }
@@ -308,8 +310,9 @@
     if (!total) return Promise.resolve();
     return Promise.all(
       jobs.map(function (j) {
-        return loadFirst(j.urls).then(function (url) {
-          assetCache[j.key] = url || j.urls[0];
+        return loadFirst(j.urls).then(function (res) {
+          assetCache[j.key] = res.url || j.urls[0];
+          if (j.key.indexOf("sp:") === 0 && res.h) spriteNatH[j.key.slice(3)] = res.h;
           done++;
           if (onProgress) onProgress(done, total);
         });
@@ -463,7 +466,8 @@
         box.dataset.name = sp.name;
       }
       var xPct = SLOT_X[slot] + (sp.x / REF_W) * 100;
-      var h = BASE_H * (sp.scale || 1);
+      var natH = spriteNatH[sp.name] || REF_CANVAS_H;
+      var h = (natH / REF_CANVAS_H) * BASE_H * (sp.scale || 1);
       var b = BASE_BOTTOM + (sp.y / REF_H) * 100;
       img.style.left = xPct + "%";
       img.style.height = h + "%";
@@ -654,10 +658,10 @@
     'background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.6) 42%,rgba(0,0,0,0) 100%)}' +
     '#vnTextbox.show{opacity:1}' +
     /* имя слева в колонке (~20% от края), текст правее на той же строке */
-    '#vnLine{display:flex;align-items:baseline;width:100%;padding-left:11%}' +
-    '#vnName{flex:0 0 15%;color:#c4ccd6;font-weight:500;letter-spacing:.02em;padding-right:2%;' +
-    'font-size:clamp(14px,1.5vw,21px);text-shadow:0 1px 6px #000;text-align:left;' +
-    'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '#vnLine{display:flex;align-items:flex-start;width:100%;padding-left:11%}' +
+    '#vnName{flex:0 0 16%;color:#c4ccd6;font-weight:500;letter-spacing:.02em;padding-right:2%;' +
+    'font-size:clamp(13px,1.4vw,20px);line-height:1.55;text-shadow:0 1px 6px #000;text-align:left;' +
+    'overflow-wrap:break-word}' +
     '#vnText{flex:1 1 auto;font-size:clamp(15px,1.65vw,23px);line-height:1.55;min-height:1.55em;' +
     'text-shadow:0 1px 8px rgba(0,0,0,.9)}' +
     '#vnLine.noname #vnName{display:none}' +
