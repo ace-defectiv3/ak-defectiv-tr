@@ -134,6 +134,7 @@
     var curtain = 0, curtainFade = 0; // доля чёрных полос сверху/снизу
     var focusBg = 0, focusChar = 0, focusFade = 0; // расфокус фона/персонажей
     var bgTf = { x: 0, y: 0, s: 1 }; // трансформация фона покоя (BackgroundTween)
+    var grid = null; // панорама gridbg: {imgs,w,h,x,y,fade} | null
     var pendingBgTween = null; // анимация проезда фона
     var pendingSticker = null; // текстовый стикер на кадр
     var pendingShake = null; // тряска на следующий кадр
@@ -165,6 +166,7 @@
         focusChar: focusChar,
         focusFade: focusFade,
         bgTf: { x: bgTf.x, y: bgTf.y, s: bgTf.s },
+        grid: grid ? { imgs: grid.imgs.slice(), w: grid.w, h: grid.h, x: grid.x, y: grid.y, fade: grid.fade } : null,
         bgTween: pendingBgTween,
         sticker: pendingSticker,
         name: "",
@@ -242,7 +244,22 @@
             else focusSlot = SLOT[fv] || slot;
           }
         } else if (cmd === "background") {
-          if (args.image) { bg = args.image; bgTf = { x: 0, y: 0, s: 1 }; }
+          if (args.image) { bg = args.image; bgTf = { x: 0, y: 0, s: 1 }; grid = null; }
+        } else if (cmd === "gridbg") {
+          if (!args.imagegroup) {
+            grid = null; // пустой [gridbg] -> убрать панораму
+          } else {
+            var ws = String(args.solidwidth || "").split("/");
+            var hs = String(args.solidheight || "").split("/");
+            grid = {
+              imgs: String(args.imagegroup).split("/"),
+              w: parseFloat(ws[0]) || 1280,
+              h: parseFloat(hs[0]) || 720,
+              x: parseFloat(args.x || "0") || 0,
+              y: parseFloat(args.y || "0") || 0,
+              fade: parseFloat(args.fadetime || "0") || 0,
+            };
+          }
         } else if (cmd === "image") {
           // CG-иллюстрация во весь экран; [Image] без image -> убрать
           if (args.image)
@@ -387,6 +404,9 @@
     frames.forEach(function (f) {
       if (f.bg && !seen["bg:" + f.bg]) { seen["bg:" + f.bg] = 1; jobs.push({ key: "bg:" + f.bg, urls: bgUrls(f.bg) }); }
       if (f.cg && f.cg.image && !seen["cg:" + f.cg.image]) { seen["cg:" + f.cg.image] = 1; jobs.push({ key: "cg:" + f.cg.image, urls: cgUrls(f.cg.image) }); }
+      if (f.grid) f.grid.imgs.forEach(function (nm) {
+        if (!seen["bg:" + nm]) { seen["bg:" + nm] = 1; jobs.push({ key: "bg:" + nm, urls: bgUrls(nm) }); }
+      });
       ["left", "center", "right"].forEach(function (s) {
         var sp = f.sprites[s];
         if (sp && !seen["sp:" + sp.name]) { seen["sp:" + sp.name] = 1; jobs.push({ key: "sp:" + sp.name, urls: spriteUrls(sp.name) }); }
@@ -420,6 +440,7 @@
       '<div id="vnStage">' +
         '<div id="vnScene">' +
           '<div id="vnBgWrap"><div id="vnBgA" class="vnBg"></div><div id="vnBgB" class="vnBg"></div></div>' +
+          '<div id="vnGrid"></div>' +
           '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
           '<div id="vnCG"></div>' +
         "</div>" +
@@ -455,6 +476,7 @@
     el.blocker = root.querySelector("#vnBlocker");
     el.sprites = root.querySelector("#vnSprites");
     el.bgWrap = root.querySelector("#vnBgWrap");
+    el.grid = root.querySelector("#vnGrid");
     el.curtainTop = root.querySelector("#vnCurtainTop");
     el.curtainBottom = root.querySelector("#vnCurtainBottom");
     el.sticker = root.querySelector("#vnSticker");
@@ -594,6 +616,43 @@
       el.cg.classList.add("show");
     } else {
       el.cg.classList.remove("show");
+    }
+
+    // панорама gridbg (2 столбца, тайлы L1/R1/L2/R2 ...)
+    if (f.grid) {
+      var g = f.grid;
+      var cols = 2, rows = Math.ceil(g.imgs.length / cols);
+      var wpct = (cols * g.w / REF_W) * 100, hpct = (rows * g.h / REF_H) * 100;
+      var sig = g.imgs.join("|") + ":" + cols + "x" + rows;
+      var tf = "translate(" + (g.x / REF_W * 100).toFixed(2) + "%," + (g.y / REF_H * 100).toFixed(2) + "%)";
+      if (el.grid.dataset.sig !== sig) {
+        // новая панорама: пересобираем тайлы и ставим позицию без проезда
+        el.grid.innerHTML = "";
+        el.grid.style.width = wpct + "%";
+        el.grid.style.height = hpct + "%";
+        el.grid.style.left = ((100 - wpct) / 2) + "%";
+        el.grid.style.top = ((100 - hpct) / 2) + "%";
+        g.imgs.forEach(function (nm, idx) {
+          var col = idx % cols, row = Math.floor(idx / cols);
+          var t = document.createElement("img");
+          t.style.cssText = "position:absolute;left:" + (col * 100 / cols) + "%;top:" + (row * 100 / rows) +
+            "%;width:" + (100 / cols) + "%;height:" + (100 / rows) + "%;object-fit:cover";
+          var cTile = assetCache["bg:" + nm];
+          var us = bgUrls(nm);
+          setImgWithFallback(t, cTile && us[0] !== cTile ? [cTile].concat(us) : us);
+          el.grid.appendChild(t);
+        });
+        el.grid.dataset.sig = sig;
+        el.grid.style.transition = "none";
+        el.grid.style.transform = tf;
+        void el.grid.offsetWidth; // reflow, чтобы стартовое положение не проезжало
+      }
+      // проезд по x,y и плавное появление
+      el.grid.style.transition = "transform " + g.fade + "s ease, opacity " + g.fade + "s ease";
+      el.grid.style.transform = tf;
+      el.grid.style.opacity = "1";
+    } else {
+      el.grid.style.opacity = "0";
     }
 
     // фильтр камеры (обесцвечивание) — состояние, ставим всегда
@@ -841,6 +900,8 @@
     '.vnBg.show{opacity:1}' +
     '#vnScene{position:absolute;inset:0;transition:filter .3s ease;will-change:transform,filter}' +
     '#vnBgWrap{position:absolute;inset:0;transform-origin:center;will-change:transform,filter}' +
+    '#vnGrid{position:absolute;opacity:0;pointer-events:none;will-change:transform,opacity}' +
+    '#vnGrid img{display:block}' +
     '#vnBlocker{position:absolute;inset:0;background-color:rgba(0,0,0,0);pointer-events:none}' +
     '.vnCurtain{position:absolute;left:0;right:0;height:0;background:#000;pointer-events:none}' +
     '#vnCurtainTop{top:0}#vnCurtainBottom{bottom:0}' +
