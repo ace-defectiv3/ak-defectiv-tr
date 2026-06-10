@@ -618,20 +618,25 @@
       el.cg.classList.remove("show");
     }
 
-    // панорама gridbg (2 столбца, тайлы L1/R1/L2/R2 ...)
+    // панорама gridbg (2 столбца, тайлы L1/R1/L2/R2 ...); те же пропорции 16:9, что у сцены
     if (f.grid) {
       var g = f.grid;
       var cols = 2, rows = Math.ceil(g.imgs.length / cols);
-      var wpct = (cols * g.w / REF_W) * 100, hpct = (rows * g.h / REF_H) * 100;
+      var Z = 1.35; // лёгкий зум-запас, чтобы проезд не оголял края
+      var over = (Z - 1) / 2 * 100; // запас с каждой стороны, %
+      var maxPan = over - 2; // предел проезда с небольшим зазором
+      // x,y из игровых единиц -> проезд: половина панорамы соответствует maxPan
+      var px = Math.max(-over, Math.min(over, (g.x / (cols * g.w / 2)) * maxPan));
+      var py = Math.max(-over, Math.min(over, (g.y / (rows * g.h / 2)) * maxPan));
+      var tf = "translate(" + px.toFixed(2) + "%," + py.toFixed(2) + "%)";
       var sig = g.imgs.join("|") + ":" + cols + "x" + rows;
-      var tf = "translate(" + (g.x / REF_W * 100).toFixed(2) + "%," + (g.y / REF_H * 100).toFixed(2) + "%)";
       if (el.grid.dataset.sig !== sig) {
         // новая панорама: пересобираем тайлы и ставим позицию без проезда
         el.grid.innerHTML = "";
-        el.grid.style.width = wpct + "%";
-        el.grid.style.height = hpct + "%";
-        el.grid.style.left = ((100 - wpct) / 2) + "%";
-        el.grid.style.top = ((100 - hpct) / 2) + "%";
+        el.grid.style.width = (Z * 100) + "%";
+        el.grid.style.height = (Z * 100) + "%";
+        el.grid.style.left = ((100 - Z * 100) / 2) + "%";
+        el.grid.style.top = ((100 - Z * 100) / 2) + "%";
         g.imgs.forEach(function (nm, idx) {
           var col = idx % cols, row = Math.floor(idx / cols);
           var t = document.createElement("img");
