@@ -191,7 +191,9 @@
           }
           if (cur[slot]) {
             if (args.scale !== undefined) cur[slot].scale = parseFloat(args.scale) || 1;
-            if (args.posto !== undefined) {
+            // posto применяем как позицию покоя, но НЕ на транзиентных анимациях
+            // (action="jump"/"shake" и т.п. — это подскок, а не новое место)
+            if (args.posto !== undefined && args.action === undefined) {
               var pp = String(args.posto).split(",");
               cur[slot].x = parseFloat(pp[0]) || 0;
               cur[slot].y = parseFloat(pp[1]) || 0;
@@ -332,7 +334,7 @@
         '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
         '<div id="vnCG"></div>' +
         '<div id="vnSubtitle"></div>' +
-        '<div id="vnTextbox"><div id="vnName"></div><div id="vnText"></div></div>' +
+        '<div id="vnTextbox"><div id="vnLine"><div id="vnName"></div><div id="vnText"></div></div></div>' +
         '<div id="vnBarL">' +
           '<button id="vnLog">ЛОГ</button>' +
           '<button id="vnHide">скрыть</button>' +
@@ -364,6 +366,7 @@
     el.cg = root.querySelector("#vnCG");
     el.textbox = root.querySelector("#vnTextbox");
     el.name = root.querySelector("#vnName");
+    el.line = root.querySelector("#vnLine");
     el.text = root.querySelector("#vnText");
     el.logPanel = root.querySelector("#vnLogPanel");
 
@@ -496,7 +499,7 @@
       el.subtitle.classList.remove("show");
       el.textbox.classList.add("show");
       el.name.textContent = f.name || "";
-      el.name.style.display = f.name ? "" : "none";
+      el.line.classList.toggle("noname", !f.name);
       startType(f.text || "");
       logPush(f.name || "", f.text || "");
     }
@@ -622,13 +625,14 @@
 
   // ---------- стили ----------
   var VN_CSS =
+    "@import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap');" +
     '#vnEnter{position:fixed;top:8px;left:120px;z-index:9998;background:rgba(20,26,36,.7);color:#dfe6f2;' +
     'border:1px solid rgba(185,205,235,.3);border-radius:.5em;padding:.35em .8em;font:600 14px Manrope,system-ui,sans-serif;' +
     'cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}' +
     '#vnEnter:hover{background:rgba(42,54,74,.8)}' +
     /* затемнённый фон вокруг окна */
     '#vnRoot{position:fixed;inset:0;z-index:9999;background:#05060a;display:flex;align-items:center;justify-content:center;' +
-    'font-family:Manrope,system-ui,"Segoe UI",sans-serif;color:#eef2f8;user-select:none}' +
+    'font-family:"Golos Text",Manrope,system-ui,"Segoe UI",sans-serif;color:#eef2f8;user-select:none}' +
     '#vnRoot[hidden]{display:none}' +
     /* окно формата телефона 16:9 (max-width можно крутить) */
     '#vnStage{position:relative;aspect-ratio:16/9;width:min(96vw,calc(94vh*16/9));max-width:1500px;' +
@@ -645,13 +649,19 @@
     'font-size:clamp(16px,2.2vw,28px);text-shadow:0 2px 14px #000;opacity:0;transition:opacity .3s}' +
     '#vnSubtitle.show{opacity:1}' +
     /* текстбокс как в игре: чёрный градиент снизу вверх, без рамки */
-    '#vnTextbox{position:absolute;left:0;right:0;bottom:0;min-height:34%;display:flex;flex-direction:column;' +
-    'justify-content:flex-end;padding:0 6% 4.5%;pointer-events:none;opacity:0;transition:opacity .25s;' +
+    '#vnTextbox{position:absolute;left:0;right:0;bottom:0;min-height:30%;display:flex;align-items:flex-end;' +
+    'padding:0 9% 5%;pointer-events:none;opacity:0;transition:opacity .25s;' +
     'background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.6) 42%,rgba(0,0,0,0) 100%)}' +
     '#vnTextbox.show{opacity:1}' +
-    '#vnName{font-weight:700;letter-spacing:.03em;color:#8fb6e8;margin-bottom:6px;' +
-    'font-size:clamp(14px,1.45vw,20px);text-shadow:0 1px 6px #000}' +
-    '#vnText{font-size:clamp(15px,1.65vw,23px);line-height:1.5;min-height:1.5em;text-shadow:0 1px 8px rgba(0,0,0,.9)}' +
+    /* имя слева в колонке (~20% от края), текст правее на той же строке */
+    '#vnLine{display:flex;align-items:baseline;width:100%;padding-left:11%}' +
+    '#vnName{flex:0 0 15%;color:#c4ccd6;font-weight:500;letter-spacing:.02em;padding-right:2%;' +
+    'font-size:clamp(14px,1.5vw,21px);text-shadow:0 1px 6px #000;text-align:left;' +
+    'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '#vnText{flex:1 1 auto;font-size:clamp(15px,1.65vw,23px);line-height:1.55;min-height:1.55em;' +
+    'text-shadow:0 1px 8px rgba(0,0,0,.9)}' +
+    '#vnLine.noname #vnName{display:none}' +
+    '#vnLine.noname{padding-left:20%}' +
     '#vnBarL{position:absolute;top:14px;left:16px;display:flex;gap:8px;z-index:5}' +
     '#vnBarR{position:absolute;top:14px;right:16px;display:flex;gap:8px;align-items:center;z-index:5}' +
     '#vnBarL button,#vnBarR button{background:rgba(10,14,22,.5);color:#dfe6f2;border:1px solid rgba(185,205,235,.25);' +
