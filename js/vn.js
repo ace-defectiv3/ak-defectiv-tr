@@ -206,6 +206,17 @@
     var storyId = parts[1];
     var idx = parseInt(parts[2] || "0", 10) || 0;
     if (!storyId) return Promise.reject(new Error("В адресе нет истории (открой эпизод в ридере)"));
+    // 1) Берём список, который уже построил сам ридер. В нём для некоторых
+    //    событий вставлена страница "Introduction" в начало, поэтому индексы
+    //    из хеша совпадают именно с этим списком, а не с сырой таблицей.
+    try {
+      if (typeof storyReview !== "undefined" && storyReview &&
+          storyReview[storyId] && storyReview[storyId].infoUnlockDatas) {
+        var arr = storyReview[storyId].infoUnlockDatas;
+        if (arr[idx] && arr[idx].storyTxt) return Promise.resolve(arr[idx].storyTxt);
+      }
+    } catch (e) {}
+    // 2) Запасной путь: сырая таблица (без Introduction, индексы могут не совпасть).
     return getReviewTable().then(function (table) {
       var entry = table[storyId];
       if (!entry || !entry.infoUnlockDatas || !entry.infoUnlockDatas[idx])
