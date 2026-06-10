@@ -22,7 +22,7 @@
   var pos = 0;
   var maxReached = -1; // чтобы не переигрывать звук при возврате назад
   var typing = null; // таймер печатной машинки
-  var typedFull = ""; // полный текст текущей реплики
+  var typedFullHtml = ""; // полный HTML текущей реплики (для мгновенного показа)
   var auto = false;
   var autoTimer = null;
   var speedIdx = 0;
@@ -424,7 +424,7 @@
     // текст / субтитр
     if (f.subtitle != null) {
       el.textbox.classList.remove("show");
-      el.subtitle.textContent = f.subtitle;
+      el.subtitle.innerHTML = formatText(f.subtitle);
       el.subtitle.classList.add("show");
       logPush("", f.subtitle);
     } else {
@@ -438,21 +438,42 @@
   }
 
   // ---------- печатная машинка ----------
+  // конвертация форматирования: <color=#xxx>..</color> -> span; <i>,<b> проходят как есть
+  function formatText(s) {
+    return String(s).replace(
+      /<color=([#\w]+)>([\s\S]*?)<\/color>/gi,
+      '<span style="color:$1">$2</span>'
+    );
+  }
+  // разбиваем на единицы: тег целиком ИЛИ один видимый символ
+  function tokenize(html) {
+    var units = [], re = /(<[^>]+>)|([\s\S])/g, m;
+    while ((m = re.exec(html))) units.push({ tag: !!m[1], s: m[1] || m[2] });
+    return units;
+  }
   function startType(full) {
     stopType();
-    typedFull = full;
-    el.text.textContent = "";
-    var i = 0;
+    typedFullHtml = formatText(full);
+    var units = tokenize(typedFullHtml);
+    var idxU = 0;
+    el.text.innerHTML = "";
     var cps = TYPE_CPS * SPEEDS[speedIdx];
-    var interval = Math.max(8, 1000 / cps);
+    var perTick = Math.max(1, Math.round(cps / 60));
     typing = setInterval(function () {
-      i += Math.max(1, Math.round(cps / 60));
-      el.text.textContent = full.slice(0, i);
-      if (i >= full.length) { stopType(); if (auto) scheduleAuto(); }
-    }, interval);
+      var added = 0;
+      while (idxU < units.length) {
+        if (units[idxU].tag) { idxU++; continue; } // теги вставляются мгновенно, не рвём
+        if (added >= perTick) break;
+        idxU++; added++;
+      }
+      var html = "";
+      for (var k = 0; k < idxU; k++) html += units[k].s;
+      el.text.innerHTML = html;
+      if (idxU >= units.length) { stopType(); if (auto) scheduleAuto(); }
+    }, Math.max(8, 1000 / cps));
   }
   function stopType() { if (typing) { clearInterval(typing); typing = null; } }
-  function finishType() { stopType(); el.text.textContent = typedFull; }
+  function finishType() { stopType(); el.text.innerHTML = typedFullHtml; }
   function isTyping() { return !!typing; }
 
   // ---------- навигация ----------
@@ -497,7 +518,7 @@
     if (!p.hidden) { p.hidden = true; return; }
     p.innerHTML = logData
       .map(function (l) {
-        return '<div class="vnLogRow">' + (l.name ? '<b>' + escapeHtml(l.name) + "</b> " : "") + escapeHtml(l.text) + "</div>";
+        return '<div class="vnLogRow">' + (l.name ? "<b>" + escapeHtml(l.name) + "</b> " : "") + formatText(l.text) + "</div>";
       })
       .join("");
     p.hidden = false;
