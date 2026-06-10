@@ -570,15 +570,16 @@
     '#vnRoot[hidden]{display:none}' +
     /* окно формата телефона 16:9 (max-width можно крутить) */
     '#vnStage{position:relative;aspect-ratio:16/9;width:min(96vw,calc(94vh*16/9));max-width:1500px;' +
+    '--vn-sp-h:128%;--vn-sp-y:34%;' + /* масштаб спрайта и сдвиг вниз — крути эти два */
     'overflow:hidden;background:#000;box-shadow:0 0 80px rgba(0,0,0,.8)}' +
     '.vnBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s ease}' +
     '.vnBg.show{opacity:1}' +
     '#vnSprites{position:absolute;inset:0;pointer-events:none}' +
-    '.vnSlot{position:absolute;bottom:0;height:96%;display:flex;align-items:flex-end;justify-content:center;' +
+    '.vnSlot{position:absolute;top:0;bottom:0;display:flex;align-items:flex-end;justify-content:center;' +
     'transition:filter .3s ease,opacity .3s ease}' +
-    '.vnSlot img{height:100%;width:auto;object-fit:contain}' +
-    '.vnSlot.left{left:1%;}.vnSlot.center{left:50%;transform:translateX(-50%);}.vnSlot.right{right:1%;}' +
-    '.vnSlot.dim{filter:brightness(.55) saturate(.85);opacity:.9}' +
+    '.vnSlot img{height:var(--vn-sp-h,128%);width:auto;object-fit:contain;transform:translateY(var(--vn-sp-y,34%))}' +
+    '.vnSlot.left{left:6%}.vnSlot.center{left:50%;transform:translateX(-50%)}.vnSlot.right{right:6%}' +
+    '.vnSlot.dim{filter:brightness(.5) saturate(.8);opacity:.9}' +
     '#vnSubtitle{position:absolute;top:40%;left:50%;transform:translateX(-50%);max-width:74%;text-align:center;' +
     'font-size:clamp(16px,2.2vw,28px);text-shadow:0 2px 14px #000;opacity:0;transition:opacity .3s}' +
     '#vnSubtitle.show{opacity:1}' +
