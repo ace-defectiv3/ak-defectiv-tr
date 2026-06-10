@@ -29,6 +29,9 @@
   var uiHidden = false;
   var reviewTableCache = null;
   var music = null; // Audio
+  var soundMap = {}; // ключ звука -> путь к файлу (из story_variables.json)
+  var assetCache = {}; // "sp:name"/"bg:name" -> рабочий URL (после предзагрузки)
+  var displayedBg = null; // имя сейчас показанного фона (чтобы не моргал)
 
   // ---------- утилиты URL (с запасными источниками) ----------
   function spriteUrls(name) {
@@ -59,14 +62,17 @@
     out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/backgrounds/" + enc + ".png");
     return out;
   }
-  function soundUrl(key) {
-    var k = String(key).replace(/^\$/, "");
+  function soundUrls(key) {
+    var soundkey = String(key).replace(/^\$/, "");
+    var soundpath = soundMap[soundkey] || soundkey; // перевод ключа в реальный путь
+    var out = [];
     try {
       if (typeof uri_sound === "function" && typeof ASSET_SOURCE !== "undefined") {
-        return uri_sound(k, ASSET_SOURCE.LOCAL);
+        out.push(uri_sound(soundpath)); // mp3 (LOCAL)
+        out.push(uri_sound(soundpath, ASSET_SOURCE.ACESHIP)); // wav (запасной)
       }
     } catch (e) {}
-    return null;
+    return out;
   }
 
   // картинка с перебором запасных адресов
@@ -214,6 +220,45 @@
     });
   }
 
+  // ---------- предзагрузка ассетов ----------
+  function loadFirst(urls) {
+    return new Promise(function (resolve) {
+      var i = 0;
+      var im = new Image();
+      im.onload = function () { resolve(im.src); };
+      im.onerror = function () { i++; if (i < urls.length) im.src = urls[i]; else resolve(null); };
+      im.src = urls[0];
+    });
+  }
+  function getSoundMap() {
+    return fetch(REMOTE_BASE + "/gamedata/story/story_variables.json")
+      .then(function (r) { return r.json(); })
+      .then(function (j) { soundMap = j || {}; })
+      .catch(function () { soundMap = {}; });
+  }
+  function preloadAssets(onProgress) {
+    var jobs = [];
+    var seen = {};
+    frames.forEach(function (f) {
+      if (f.bg && !seen["bg:" + f.bg]) { seen["bg:" + f.bg] = 1; jobs.push({ key: "bg:" + f.bg, urls: bgUrls(f.bg) }); }
+      ["left", "center", "right"].forEach(function (s) {
+        var sp = f.sprites[s];
+        if (sp && !seen["sp:" + sp.name]) { seen["sp:" + sp.name] = 1; jobs.push({ key: "sp:" + sp.name, urls: spriteUrls(sp.name) }); }
+      });
+    });
+    var done = 0, total = jobs.length;
+    if (!total) return Promise.resolve();
+    return Promise.all(
+      jobs.map(function (j) {
+        return loadFirst(j.urls).then(function (url) {
+          assetCache[j.key] = url || j.urls[0];
+          done++;
+          if (onProgress) onProgress(done, total);
+        });
+      })
+    );
+  }
+
   // ---------- UI ----------
   var el = {};
   function buildUI() {
@@ -292,7 +337,15 @@
       .then(function (txt) {
         frames = parse(txt);
         if (!frames.length) throw new Error("В этой истории не нашлось реплик");
-        pos = 0; maxReached = -1;
+        pos = 0; maxReached = -1; displayedBg = null;
+        return Promise.all([
+          getSoundMap(),
+          preloadAssets(function (d, t) {
+            enterBtn.textContent = "Загрузка " + d + "/" + t;
+          }),
+        ]);
+      })
+      .then(function () {
         el.root.hidden = false;
         document.body.classList.add("vn-on");
         render(0, true);
@@ -319,20 +372,15 @@
     pos = i;
     var f = frames[i];
 
-    // фон (кроссфейд)
-    if (f.bg) {
+    // фон: меняем кроссфейдом только если он реально другой (иначе моргает)
+    if (f.bg && f.bg !== displayedBg) {
+      displayedBg = f.bg;
+      var url = assetCache["bg:" + f.bg] || bgUrls(f.bg)[0];
       var next = el.bgActive === el.bgA ? el.bgB : el.bgA;
-      var img = new Image();
-      var urls = bgUrls(f.bg);
-      var k = 0;
-      img.onload = function () {
-        next.style.backgroundImage = 'url("' + img.src + '")';
-        next.classList.add("show");
-        el.bgActive.classList.remove("show");
-        el.bgActive = next;
-      };
-      img.onerror = function () { k++; if (k < urls.length) img.src = urls[k]; };
-      img.src = urls[0];
+      next.style.backgroundImage = 'url("' + url + '")';
+      next.classList.add("show");
+      el.bgActive.classList.remove("show");
+      el.bgActive = next;
     }
 
     // спрайты
@@ -345,7 +393,9 @@
       if (!existing || box.dataset.name !== needSrc) {
         box.innerHTML = "";
         var im = document.createElement("img");
-        setImgWithFallback(im, spriteUrls(sp.name));
+        var cached = assetCache["sp:" + sp.name];
+        if (cached) im.src = cached;
+        else setImgWithFallback(im, spriteUrls(sp.name));
         box.appendChild(im);
         box.dataset.name = needSrc;
       }
@@ -450,19 +500,26 @@
 
   // ---------- аудио ----------
   function playSfx(key) {
-    var url = soundUrl(key);
-    if (!url) return;
-    try { var a = new Audio(url); a.volume = 0.85; a.play().catch(function () {}); } catch (e) {}
+    var urls = soundUrls(key);
+    if (!urls.length) return;
+    try {
+      var a = new Audio(urls[0]);
+      a.volume = 0.85;
+      a.onerror = function () { if (urls[1]) { a.src = urls[1]; a.play().catch(function () {}); } };
+      a.play().catch(function () {});
+    } catch (e) {}
   }
   function playMusic(key, vol) {
-    var url = soundUrl(key);
-    if (!url) return;
+    var urls = soundUrls(key);
+    if (!urls.length) return;
     try {
       if (music) { music.pause(); }
-      music = new Audio(url);
+      music = new Audio(urls[0]);
       music.loop = true;
       music.volume = typeof vol === "number" && !isNaN(vol) ? vol : 0.6;
-      music.play().catch(function () {});
+      var m = music;
+      m.onerror = function () { if (urls[1]) { m.src = urls[1]; m.play().catch(function () {}); } };
+      m.play().catch(function () {});
     } catch (e) {}
   }
 
