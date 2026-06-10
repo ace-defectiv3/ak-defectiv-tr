@@ -17,6 +17,12 @@
     (typeof DATA_BASE !== "undefined" && DATA_BASE && DATA_BASE[SERVER]) ||
     "https://raw.githubusercontent.com/ArknightsAssets/ArknightsGamedata/master/en";
 
+  // --- позиционирование спрайтов (можно крутить) ---
+  var SLOT_X = { left: 30, center: 50, right: 70 }; // базовый X слота, % ширины кадра
+  var REF_W = 1920, REF_H = 1080; // опорное разрешение для пиксельных сдвигов posto
+  var BASE_H = 128;   // базовая высота спрайта, % высоты кадра (как --vn-sp-h)
+  var BASE_BOTTOM = -42; // насколько низ холста уходит за нижний край, %
+
   // ---------- состояние ----------
   var frames = [];
   var pos = 0;
@@ -62,6 +68,18 @@
     out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/backgrounds/" + enc + ".png");
     return out;
   }
+  function cgUrls(image) {
+    var enc = encodeURIComponent(image);
+    var out = [];
+    try {
+      if (typeof uri_image === "function" && typeof ASSET_SOURCE !== "undefined") {
+        out.push(uri_image(image, ASSET_SOURCE.ACESHIP));
+        out.push(uri_image(image, ASSET_SOURCE.LOCAL));
+      }
+    } catch (e) {}
+    out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/images/" + enc + ".png");
+    return out;
+  }
   function soundUrls(key) {
     var soundkey = String(key).replace(/^\$/, "");
     var soundpath = soundMap[soundkey] || soundkey; // перевод ключа в реальный путь
@@ -105,18 +123,22 @@
     var cur = { left: null, center: null, right: null }; // имена спрайтов в слотах
     var focusSlot = null; // 'left'|'center'|'right'|null
     var bg = null;
+    var cg = null; // CG-иллюстрация во весь экран: {image,x,y,scale} | null
     var pendingSounds = [];
     var pendingMusic = null; // {key,volume} | 'stop' | null
     var pendingName = null;
 
     function pushFrame(extra) {
-      var snap = {
-        left: cur.left ? { name: cur.left, dim: focusSlot && focusSlot !== "left" } : null,
-        center: cur.center ? { name: cur.center, dim: focusSlot && focusSlot !== "center" } : null,
-        right: cur.right ? { name: cur.right, dim: focusSlot && focusSlot !== "right" } : null,
-      };
+      function snapSlot(slot) {
+        var s = cur[slot];
+        if (!s) return null;
+        return { name: s.name, scale: s.scale, x: s.x, y: s.y, alpha: s.alpha,
+                 dim: !!(focusSlot && focusSlot !== slot) };
+      }
+      var snap = { left: snapSlot("left"), center: snapSlot("center"), right: snapSlot("right") };
       var f = {
         bg: bg,
+        cg: cg,
         sprites: snap,
         name: "",
         text: "",
@@ -156,14 +178,26 @@
         var args = paren >= 0 ? parseArgs(content.slice(paren + 1, content.lastIndexOf(")"))) : {};
 
         if (cmd === "charslot" || cmd === "character") {
-          if (paren < 0 || (!args.name && !args.slot && !args.focus)) {
+          if (paren < 0 || (!args.name && !args.slot && !args.focus && args.scale === undefined && args.posto === undefined)) {
             // пустой [charslot] -> очистить всех
             cur = { left: null, center: null, right: null };
             focusSlot = null;
             continue;
           }
           var slot = SLOT[(args.slot || "").toLowerCase()] || "center";
-          if (args.name) cur[slot] = args.name;
+          if (args.name) {
+            if (!cur[slot]) cur[slot] = { name: args.name, scale: 1, x: 0, y: 0, alpha: 1 };
+            else cur[slot].name = args.name;
+          }
+          if (cur[slot]) {
+            if (args.scale !== undefined) cur[slot].scale = parseFloat(args.scale) || 1;
+            if (args.posto !== undefined) {
+              var pp = String(args.posto).split(",");
+              cur[slot].x = parseFloat(pp[0]) || 0;
+              cur[slot].y = parseFloat(pp[1]) || 0;
+            }
+            if (args.ato !== undefined) cur[slot].alpha = parseFloat(args.ato);
+          }
           if (args.focus !== undefined) {
             var fv = String(args.focus).toLowerCase();
             if (fv === "none" || fv === "n" || fv === "-1") focusSlot = null;
@@ -171,6 +205,16 @@
           }
         } else if (cmd === "background") {
           if (args.image) bg = args.image;
+        } else if (cmd === "image") {
+          // CG-иллюстрация во весь экран; [Image] без image -> убрать
+          if (args.image)
+            cg = {
+              image: args.image,
+              x: parseFloat(args.x || "0") || 0,
+              y: parseFloat(args.y || "0") || 0,
+              scale: parseFloat(args.xscale || args.scale || "1") || 1,
+            };
+          else cg = null;
         } else if (cmd === "playmusic") {
           pendingMusic = { key: args.key, volume: parseFloat(args.volume || "0.6") };
         } else if (cmd === "stopmusic") {
@@ -252,6 +296,7 @@
     var seen = {};
     frames.forEach(function (f) {
       if (f.bg && !seen["bg:" + f.bg]) { seen["bg:" + f.bg] = 1; jobs.push({ key: "bg:" + f.bg, urls: bgUrls(f.bg) }); }
+      if (f.cg && f.cg.image && !seen["cg:" + f.cg.image]) { seen["cg:" + f.cg.image] = 1; jobs.push({ key: "cg:" + f.cg.image, urls: cgUrls(f.cg.image) }); }
       ["left", "center", "right"].forEach(function (s) {
         var sp = f.sprites[s];
         if (sp && !seen["sp:" + sp.name]) { seen["sp:" + sp.name] = 1; jobs.push({ key: "sp:" + sp.name, urls: spriteUrls(sp.name) }); }
@@ -285,6 +330,7 @@
         '<div id="vnBgA" class="vnBg"></div>' +
         '<div id="vnBgB" class="vnBg"></div>' +
         '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
+        '<div id="vnCG"></div>' +
         '<div id="vnSubtitle"></div>' +
         '<div id="vnTextbox"><div id="vnName"></div><div id="vnText"></div></div>' +
         '<div id="vnBarL">' +
@@ -315,6 +361,7 @@
       right: root.querySelector(".vnSlot.right"),
     };
     el.subtitle = root.querySelector("#vnSubtitle");
+    el.cg = root.querySelector("#vnCG");
     el.textbox = root.querySelector("#vnTextbox");
     el.name = root.querySelector("#vnName");
     el.text = root.querySelector("#vnText");
@@ -397,24 +444,39 @@
       el.bgActive = next;
     }
 
-    // спрайты
+    // спрайты: позиция = базовый X слота + posto, высота = база * scale, низ за кадром + posto.y
     ["left", "center", "right"].forEach(function (slot) {
       var box = el.slots[slot];
       var sp = f.sprites[slot];
-      if (!sp) { box.innerHTML = ""; box.classList.remove("dim"); return; }
-      var existing = box.querySelector("img");
-      var needSrc = sp.name;
-      if (!existing || box.dataset.name !== needSrc) {
+      if (!sp) { box.innerHTML = ""; box.dataset.name = ""; return; }
+      var img = box.querySelector("img");
+      if (!img || box.dataset.name !== sp.name) {
         box.innerHTML = "";
-        var im = document.createElement("img");
+        img = document.createElement("img");
         var cached = assetCache["sp:" + sp.name];
-        if (cached) im.src = cached;
-        else setImgWithFallback(im, spriteUrls(sp.name));
-        box.appendChild(im);
-        box.dataset.name = needSrc;
+        if (cached) img.src = cached;
+        else setImgWithFallback(img, spriteUrls(sp.name));
+        box.appendChild(img);
+        box.dataset.name = sp.name;
       }
-      box.classList.toggle("dim", !!sp.dim);
+      var xPct = SLOT_X[slot] + (sp.x / REF_W) * 100;
+      var h = BASE_H * (sp.scale || 1);
+      var b = BASE_BOTTOM + (sp.y / REF_H) * 100;
+      img.style.left = xPct + "%";
+      img.style.height = h + "%";
+      img.style.bottom = b + "%";
+      img.style.opacity = sp.alpha == null ? 1 : sp.alpha;
+      img.style.filter = sp.dim ? "brightness(.5) saturate(.8)" : "none";
     });
+
+    // CG-иллюстрация во весь экран
+    if (f.cg && f.cg.image) {
+      var cgurl = assetCache["cg:" + f.cg.image] || cgUrls(f.cg.image)[0];
+      el.cg.style.backgroundImage = 'url("' + cgurl + '")';
+      el.cg.classList.add("show");
+    } else {
+      el.cg.classList.remove("show");
+    }
 
     // звук/музыка только при движении вперёд в новый кадр
     if (forward && i > maxReached) {
@@ -570,16 +632,15 @@
     '#vnRoot[hidden]{display:none}' +
     /* окно формата телефона 16:9 (max-width можно крутить) */
     '#vnStage{position:relative;aspect-ratio:16/9;width:min(96vw,calc(94vh*16/9));max-width:1500px;' +
-    '--vn-sp-h:128%;--vn-sp-y:34%;' + /* масштаб спрайта и сдвиг вниз — крути эти два */
     'overflow:hidden;background:#000;box-shadow:0 0 80px rgba(0,0,0,.8)}' +
     '.vnBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s ease}' +
     '.vnBg.show{opacity:1}' +
     '#vnSprites{position:absolute;inset:0;pointer-events:none}' +
-    '.vnSlot{position:absolute;top:0;bottom:0;display:flex;align-items:flex-end;justify-content:center;' +
-    'transition:filter .3s ease,opacity .3s ease}' +
-    '.vnSlot img{height:var(--vn-sp-h,128%);width:auto;object-fit:contain;transform:translateY(var(--vn-sp-y,34%))}' +
-    '.vnSlot.left{left:6%}.vnSlot.center{left:50%;transform:translateX(-50%)}.vnSlot.right{right:6%}' +
-    '.vnSlot.dim{filter:brightness(.5) saturate(.8);opacity:.9}' +
+    '.vnSlot{position:absolute;inset:0}' +
+    '.vnSlot img{position:absolute;width:auto;object-fit:contain;transform:translateX(-50%);' +
+    'transition:left .4s ease,bottom .4s ease,height .4s ease,opacity .4s ease,filter .3s ease}' +
+    '#vnCG{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .45s ease}' +
+    '#vnCG.show{opacity:1}' +
     '#vnSubtitle{position:absolute;top:40%;left:50%;transform:translateX(-50%);max-width:74%;text-align:center;' +
     'font-size:clamp(16px,2.2vw,28px);text-shadow:0 2px 14px #000;opacity:0;transition:opacity .3s}' +
     '#vnSubtitle.show{opacity:1}' +
