@@ -281,20 +281,23 @@
     root.id = "vnRoot";
     root.hidden = true;
     root.innerHTML =
-      '<div id="vnBgA" class="vnBg"></div>' +
-      '<div id="vnBgB" class="vnBg"></div>' +
-      '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
-      '<div id="vnSubtitle"></div>' +
-      '<div id="vnTextbox"><div id="vnName"></div><div id="vnText"></div></div>' +
-      '<div id="vnBar">' +
-        '<button id="vnLog">ЛОГ</button>' +
-        '<button id="vnHide">скрыть текст</button>' +
-        '<span class="vnGap"></span>' +
-        '<button id="vnAuto">AUTO</button>' +
-        '<button id="vnSpeed">1x</button>' +
-        '<button id="vnExit">выход</button>' +
-      "</div>" +
-      '<div id="vnLogPanel" hidden></div>';
+      '<div id="vnStage">' +
+        '<div id="vnBgA" class="vnBg"></div>' +
+        '<div id="vnBgB" class="vnBg"></div>' +
+        '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
+        '<div id="vnSubtitle"></div>' +
+        '<div id="vnTextbox"><div id="vnName"></div><div id="vnText"></div></div>' +
+        '<div id="vnBarL">' +
+          '<button id="vnLog">ЛОГ</button>' +
+          '<button id="vnHide">скрыть</button>' +
+        "</div>" +
+        '<div id="vnBarR">' +
+          '<button id="vnAuto">AUTO</button>' +
+          '<button id="vnSpeed">1x</button>' +
+          '<button id="vnExit">выход</button>' +
+        "</div>" +
+        '<div id="vnLogPanel" hidden></div>' +
+      "</div>";
     document.body.appendChild(root);
 
     var btn = document.createElement("button");
@@ -325,7 +328,7 @@
     root.querySelector("#vnLog").addEventListener("click", function (e) { e.stopPropagation(); toggleLog(); });
 
     root.addEventListener("click", function (e) {
-      if (e.target.closest("#vnBar") || e.target.closest("#vnLogPanel")) return;
+      if (e.target.closest("#vnBarL") || e.target.closest("#vnBarR") || e.target.closest("#vnLogPanel")) return;
       if (uiHidden) { toggleHide(); return; } // первый клик при скрытом UI — вернуть текст
       advance();
     });
@@ -561,37 +564,43 @@
     'border:1px solid rgba(185,205,235,.3);border-radius:.5em;padding:.35em .8em;font:600 14px Manrope,system-ui,sans-serif;' +
     'cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}' +
     '#vnEnter:hover{background:rgba(42,54,74,.8)}' +
-    '#vnRoot{position:fixed;inset:0;z-index:9999;background:#06070a;overflow:hidden;' +
+    /* затемнённый фон вокруг окна */
+    '#vnRoot{position:fixed;inset:0;z-index:9999;background:#05060a;display:flex;align-items:center;justify-content:center;' +
     'font-family:Manrope,system-ui,"Segoe UI",sans-serif;color:#eef2f8;user-select:none}' +
+    /* окно формата телефона 16:9 (max-width можно крутить) */
+    '#vnStage{position:relative;aspect-ratio:16/9;width:min(96vw,calc(94vh*16/9));max-width:1500px;' +
+    'overflow:hidden;background:#000;box-shadow:0 0 80px rgba(0,0,0,.8)}' +
     '.vnBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s ease}' +
     '.vnBg.show{opacity:1}' +
     '#vnSprites{position:absolute;inset:0;pointer-events:none}' +
-    '.vnSlot{position:absolute;bottom:0;height:92%;display:flex;align-items:flex-end;justify-content:center;' +
+    '.vnSlot{position:absolute;bottom:0;height:96%;display:flex;align-items:flex-end;justify-content:center;' +
     'transition:filter .3s ease,opacity .3s ease}' +
-    '.vnSlot img{height:100%;width:auto;object-fit:contain;filter:drop-shadow(0 0 30px rgba(0,0,0,.5))}' +
-    '.vnSlot.left{left:2%;}.vnSlot.center{left:50%;transform:translateX(-50%);}.vnSlot.right{right:2%;}' +
-    '.vnSlot.dim{filter:brightness(.5) saturate(.8);opacity:.85}' +
-    '#vnSubtitle{position:absolute;top:42%;left:50%;transform:translateX(-50%);max-width:70%;text-align:center;' +
-    'font-size:26px;text-shadow:0 2px 12px #000;opacity:0;transition:opacity .3s}' +
+    '.vnSlot img{height:100%;width:auto;object-fit:contain}' +
+    '.vnSlot.left{left:1%;}.vnSlot.center{left:50%;transform:translateX(-50%);}.vnSlot.right{right:1%;}' +
+    '.vnSlot.dim{filter:brightness(.55) saturate(.85);opacity:.9}' +
+    '#vnSubtitle{position:absolute;top:40%;left:50%;transform:translateX(-50%);max-width:74%;text-align:center;' +
+    'font-size:clamp(16px,2.2vw,28px);text-shadow:0 2px 14px #000;opacity:0;transition:opacity .3s}' +
     '#vnSubtitle.show{opacity:1}' +
-    '#vnTextbox{position:absolute;left:50%;transform:translateX(-50%);bottom:5%;width:min(900px,82%);' +
-    'background:rgba(10,13,20,.62);-webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%);' +
-    'border:1px solid rgba(185,205,235,.16);border-radius:14px;padding:18px 26px 22px;box-shadow:0 10px 40px rgba(0,0,0,.5);' +
-    'opacity:0;transition:opacity .25s}' +
+    /* текстбокс как в игре: чёрный градиент снизу вверх, без рамки */
+    '#vnTextbox{position:absolute;left:0;right:0;bottom:0;min-height:34%;display:flex;flex-direction:column;' +
+    'justify-content:flex-end;padding:0 6% 4.5%;pointer-events:none;opacity:0;transition:opacity .25s;' +
+    'background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.6) 42%,rgba(0,0,0,0) 100%)}' +
     '#vnTextbox.show{opacity:1}' +
-    '#vnName{font-weight:700;letter-spacing:.03em;color:#9fc0e6;margin-bottom:8px;font-size:18px}' +
-    '#vnText{font-size:21px;line-height:1.5;min-height:1.5em}' +
-    '#vnBar{position:absolute;top:14px;right:18px;display:flex;gap:8px;align-items:center;z-index:5}' +
-    '#vnBar button{background:rgba(20,26,36,.55);color:#dfe6f2;border:1px solid rgba(185,205,235,.22);' +
-    'border-radius:.5em;padding:.3em .7em;font:600 13px Manrope,system-ui,sans-serif;cursor:pointer;' +
-    '-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}' +
-    '#vnBar button:hover{background:rgba(42,54,74,.7)}' +
-    '#vnBar button.on{background:rgba(120,140,175,.75);color:#fff}' +
-    '#vnBar .vnGap{width:22px}' +
-    '#vnRoot.vn-ui-hidden #vnTextbox,#vnRoot.vn-ui-hidden #vnSubtitle,#vnRoot.vn-ui-hidden #vnBar{opacity:0;pointer-events:none}' +
-    '#vnLogPanel{position:absolute;inset:8% 12%;background:rgba(8,10,16,.92);border:1px solid rgba(185,205,235,.2);' +
-    'border-radius:14px;padding:24px 28px;overflow-y:auto;z-index:6;font-size:17px;line-height:1.6}' +
-    '.vnLogRow{margin-bottom:12px}.vnLogRow b{color:#9fc0e6}';
+    '#vnName{font-weight:700;letter-spacing:.03em;color:#8fb6e8;margin-bottom:6px;' +
+    'font-size:clamp(14px,1.45vw,20px);text-shadow:0 1px 6px #000}' +
+    '#vnText{font-size:clamp(15px,1.65vw,23px);line-height:1.5;min-height:1.5em;text-shadow:0 1px 8px rgba(0,0,0,.9)}' +
+    '#vnBarL{position:absolute;top:14px;left:16px;display:flex;gap:8px;z-index:5}' +
+    '#vnBarR{position:absolute;top:14px;right:16px;display:flex;gap:8px;align-items:center;z-index:5}' +
+    '#vnBarL button,#vnBarR button{background:rgba(10,14,22,.5);color:#dfe6f2;border:1px solid rgba(185,205,235,.25);' +
+    'border-radius:.45em;padding:.3em .7em;font:600 13px Manrope,system-ui,sans-serif;cursor:pointer;' +
+    '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}' +
+    '#vnBarL button:hover,#vnBarR button:hover{background:rgba(42,54,74,.7)}' +
+    '#vnBarL button.on,#vnBarR button.on{background:rgba(120,140,175,.8);color:#fff}' +
+    '#vnRoot.vn-ui-hidden #vnTextbox,#vnRoot.vn-ui-hidden #vnSubtitle,' +
+    '#vnRoot.vn-ui-hidden #vnBarL,#vnRoot.vn-ui-hidden #vnBarR{opacity:0;pointer-events:none}' +
+    '#vnLogPanel{position:absolute;inset:6% 8%;background:rgba(8,10,16,.94);border:1px solid rgba(185,205,235,.2);' +
+    'border-radius:12px;padding:22px 26px;overflow-y:auto;z-index:6;font-size:16px;line-height:1.6}' +
+    '.vnLogRow{margin-bottom:11px}.vnLogRow b{color:#8fb6e8}';
 
   // ---------- старт ----------
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", buildUI);
