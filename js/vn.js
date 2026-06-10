@@ -567,6 +567,7 @@
     /* затемнённый фон вокруг окна */
     '#vnRoot{position:fixed;inset:0;z-index:9999;background:#05060a;display:flex;align-items:center;justify-content:center;' +
     'font-family:Manrope,system-ui,"Segoe UI",sans-serif;color:#eef2f8;user-select:none}' +
+    '#vnRoot[hidden]{display:none}' +
     /* окно формата телефона 16:9 (max-width можно крутить) */
     '#vnStage{position:relative;aspect-ratio:16/9;width:min(96vw,calc(94vh*16/9));max-width:1500px;' +
     'overflow:hidden;background:#000;box-shadow:0 0 80px rgba(0,0,0,.8)}' +
