@@ -45,46 +45,38 @@
   var displayedBg = null; // имя сейчас показанного фона (чтобы не моргал)
 
   // ---------- утилиты URL (с запасными источниками) ----------
-  // jsdelivr-akgcc -> прямой raw.githubusercontent (там есть всё: операторы и NPC, надёжнее CDN для огромного репо)
-  function akgccRaw(url) {
-    return url ? url.replace("https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/", "https://raw.githubusercontent.com/akgcc/arkdata/main/") : null;
-  }
   function spriteUrls(name) {
-    // разбор id#face$body и набор запасных имён, как в самом ридере
+    // разбор id#face$body и запасные имена, как в самом ридере
     var m = /^(.*?)(?:#(\d+))?(?:\$(\d+))?$/.exec(name) || [];
     var id = m[1] || name;
     var face = ((m[2] || "1").replace(/^0+/, "")) || "1";
     var body = ((m[3] || "1").replace(/^0+/, "")) || "1";
-    var variants = [name, id + "#" + face + "$" + body, id + "#" + face, id + "$" + body, id + "#1$1", id];
+    var full = id + "#" + face + "$" + body;
+    var variants = [name, full, id + "#" + face, id + "$" + body, id + "#1$1", id];
+    var ACE = "https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/characters/";
+    var AKG = "https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/assets/avg/characters/";
     var seen = {}, out = [];
     variants.forEach(function (v) {
       if (!v || seen[v]) return;
       seen[v] = 1;
       var enc = encodeURIComponent(v);
-      try {
-        if (typeof uri_character === "function" && typeof ASSET_SOURCE !== "undefined") {
-          out.push(uri_character(enc, ASSET_SOURCE.ACESHIP)); // Aceship CDN (операторы)
-          var loc = uri_character(enc, ASSET_SOURCE.LOCAL); // akgcc CDN
-          out.push(akgccRaw(loc)); // akgcc raw (NPC и остальное)
-          out.push(loc);
-        } else {
-          out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/characters/" + enc + ".png");
-        }
-      } catch (e) {}
+      out.push(AKG + enc.toLowerCase() + ".png"); // akgcc CDN — полный датасет (операторы и NPC)
+      out.push(ACE + enc + ".png"); // Aceship CDN — запасной
     });
-    return out.filter(Boolean);
+    // последний резерв: thumb-webp (как у ридера) — хуже качеством, но не пусто
+    out.push("https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/thumbs/" + encodeURIComponent(full).toLowerCase() + ".webp");
+    return out;
   }
   function bgUrls(image) {
     var enc = encodeURIComponent(image);
     var out = [];
     try {
       if (typeof uri_background === "function" && typeof ASSET_SOURCE !== "undefined") {
-        out.push(uri_background(image, ASSET_SOURCE.ACESHIP));
-        var loc = uri_background(image, ASSET_SOURCE.LOCAL);
-        out.push(akgccRaw(loc));
-        out.push(loc);
+        out.push(uri_background(image, ASSET_SOURCE.LOCAL)); // akgcc CDN (полный датасет)
+        out.push(uri_background(image, ASSET_SOURCE.ACESHIP)); // Aceship CDN запасной
       }
     } catch (e) {}
+    out.push("https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/assets/torappu/dynamicassets/avg/backgrounds/" + enc.toLowerCase() + ".png");
     out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/backgrounds/" + enc + ".png");
     return out.filter(Boolean);
   }
@@ -93,10 +85,8 @@
     var out = [];
     try {
       if (typeof uri_image === "function" && typeof ASSET_SOURCE !== "undefined") {
-        out.push(uri_image(image, ASSET_SOURCE.ACESHIP));
-        var loc = uri_image(image, ASSET_SOURCE.LOCAL);
-        out.push(akgccRaw(loc));
-        out.push(loc);
+        out.push(uri_image(image, ASSET_SOURCE.LOCAL)); // akgcc CDN
+        out.push(uri_image(image, ASSET_SOURCE.ACESHIP)); // Aceship CDN запасной
       }
     } catch (e) {}
     out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/images/" + enc + ".png");
@@ -412,7 +402,7 @@
     return Promise.all(
       jobs.map(function (j) {
         return loadFirst(j.urls).then(function (res) {
-          assetCache[j.key] = res.url || j.urls[0];
+          assetCache[j.key] = res.url || null; // не кэшируем битый адрес: рендер сам переберёт запасные
           if (j.key.indexOf("sp:") === 0 && res.h) spriteNatH[j.key.slice(3)] = res.h;
           done++;
           if (onProgress) onProgress(done, total);
@@ -576,8 +566,16 @@
         box.innerHTML = "";
         img = document.createElement("img");
         var cached = assetCache["sp:" + sp.name];
-        if (cached) img.src = cached;
-        else setImgWithFallback(img, spriteUrls(sp.name));
+        var urls = spriteUrls(sp.name);
+        if (cached && urls[0] !== cached) urls = [cached].concat(urls); // кэш как подсказка, но с полным запасом
+        var spName = sp.name, spScale = sp.scale || 1;
+        img.onload = function () {
+          if (!this.naturalHeight) return;
+          spriteNatH[spName] = this.naturalHeight; // уточняем реальную высоту холста
+          var sf = Math.min(SIZE_MAX, Math.max(SIZE_MIN, 1 + CANVAS_INFLUENCE * (this.naturalHeight / REF_CANVAS_H - 1)));
+          this.style.height = BASE_H * sf * spScale + "%";
+        };
+        setImgWithFallback(img, urls);
         box.appendChild(img);
         box.dataset.name = sp.name;
       }
