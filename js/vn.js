@@ -39,6 +39,7 @@
   var uiHidden = false;
   var reviewTableCache = null;
   var music = null; // Audio
+  var shakeRAF = null; // кадр анимации тряски
   var soundMap = {}; // ключ звука -> путь к файлу (из story_variables.json)
   var assetCache = {}; // "sp:name"/"bg:name" -> рабочий URL (после предзагрузки)
   var displayedBg = null; // имя сейчас показанного фона (чтобы не моргал)
@@ -128,6 +129,11 @@
     var focusSlot = null; // 'left'|'center'|'right'|null
     var bg = null;
     var cg = null; // CG-иллюстрация во весь экран: {image,x,y,scale} | null
+    var grayscale = 0; // текущее обесцвечивание сцены (CameraEffect)
+    var filterFade = 0; // длительность перехода фильтра
+    var blocker = { a: 0, r: 0, g: 0, b: 0 }; // заливка покоя (Blocker)
+    var pendingShake = null; // тряска на следующий кадр
+    var pendingBlockerAnim = null; // анимация заливки (вспышка/затемнение)
     var pendingSounds = [];
     var pendingMusic = null; // {key,volume} | 'stop' | null
     var pendingName = null;
@@ -144,6 +150,11 @@
         bg: bg,
         cg: cg,
         sprites: snap,
+        grayscale: grayscale,
+        filterFade: filterFade,
+        blocker: { a: blocker.a, r: blocker.r, g: blocker.g, b: blocker.b },
+        blockerAnim: pendingBlockerAnim,
+        shake: pendingShake,
         name: "",
         text: "",
         subtitle: null,
@@ -154,6 +165,9 @@
       fr.push(f);
       pendingSounds = [];
       pendingMusic = null;
+      pendingBlockerAnim = null;
+      pendingShake = null;
+      filterFade = 0;
     }
 
     for (var li = 0; li < lines.length; li++) {
@@ -221,6 +235,28 @@
               scale: parseFloat(args.xscale || args.scale || "1") || 1,
             };
           else cg = null;
+        } else if (cmd === "camerashake") {
+          var xs = parseFloat(args.xstrength || "0"), ys = parseFloat(args.ystrength || "0");
+          if (xs || ys)
+            pendingShake = { x: xs, y: ys, dur: parseFloat(args.duration || "0"), vib: parseFloat(args.vibrato || "10") };
+        } else if (cmd === "cameraeffect") {
+          if ((args.effect || "").toLowerCase() === "grayscale") {
+            grayscale = parseFloat(args.amount != null ? args.amount : "0") || 0;
+            filterFade = parseFloat(args.fadetime || "0") || 0;
+          }
+        } else if (cmd === "blocker") {
+          var ba = parseFloat(args.a || "0") || 0, br = parseFloat(args.r || "0") || 0,
+              bg2 = parseFloat(args.g || "0") || 0, bb = parseFloat(args.b || "0") || 0;
+          var fa = args.afrom != null ? parseFloat(args.afrom) : ba;
+          var frr = args.rfrom != null ? parseFloat(args.rfrom) : br;
+          var fg = args.gfrom != null ? parseFloat(args.gfrom) : bg2;
+          var fb = args.bfrom != null ? parseFloat(args.bfrom) : bb;
+          blocker = { a: ba, r: br, g: bg2, b: bb };
+          pendingBlockerAnim = {
+            fromA: fa, fromR: frr, fromG: fg, fromB: fb,
+            toA: ba, toR: br, toG: bg2, toB: bb,
+            fade: parseFloat(args.fadetime || "0") || 0,
+          };
         } else if (cmd === "playmusic") {
           pendingMusic = { key: args.key, volume: parseFloat(args.volume || "0.6") };
         } else if (cmd === "stopmusic") {
@@ -334,10 +370,13 @@
     root.hidden = true;
     root.innerHTML =
       '<div id="vnStage">' +
-        '<div id="vnBgA" class="vnBg"></div>' +
-        '<div id="vnBgB" class="vnBg"></div>' +
-        '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
-        '<div id="vnCG"></div>' +
+        '<div id="vnScene">' +
+          '<div id="vnBgA" class="vnBg"></div>' +
+          '<div id="vnBgB" class="vnBg"></div>' +
+          '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
+          '<div id="vnCG"></div>' +
+        "</div>" +
+        '<div id="vnBlocker"></div>' +
         '<div id="vnSubtitle"></div>' +
         '<div id="vnTextbox"><div id="vnLine"><div id="vnName"></div><div id="vnText"></div></div></div>' +
         '<div id="vnBarL">' +
@@ -362,6 +401,8 @@
     el.bgA = root.querySelector("#vnBgA");
     el.bgB = root.querySelector("#vnBgB");
     el.bgActive = el.bgA;
+    el.scene = root.querySelector("#vnScene");
+    el.blocker = root.querySelector("#vnBlocker");
     el.slots = {
       left: root.querySelector(".vnSlot.left"),
       center: root.querySelector(".vnSlot.center"),
@@ -431,6 +472,8 @@
     el.root.hidden = true;
     document.body.classList.remove("vn-on");
     stopAuto();
+    if (shakeRAF) { cancelAnimationFrame(shakeRAF); shakeRAF = null; }
+    if (el.scene) { el.scene.style.transform = ""; el.scene.style.filter = "none"; }
     if (music) { try { music.pause(); } catch (e) {} music = null; }
   }
 
@@ -440,6 +483,7 @@
     if (i >= frames.length) { stopAuto(); return; }
     pos = i;
     var f = frames[i];
+    var isNew = forward && i > maxReached; // вперёд в ещё не виденный кадр
 
     // фон: меняем кроссфейдом только если он реально другой (иначе моргает)
     if (f.bg && f.bg !== displayedBg) {
@@ -489,12 +533,19 @@
       el.cg.classList.remove("show");
     }
 
-    // звук/музыка только при движении вперёд в новый кадр
-    if (forward && i > maxReached) {
+    // фильтр камеры (обесцвечивание) — состояние, ставим всегда
+    el.scene.style.transitionDuration = (f.filterFade || 0) + "s";
+    el.scene.style.filter = f.grayscale > 0 ? "grayscale(" + f.grayscale + ")" : "none";
+    // заливка (Blocker): покой ставим всегда, вспышку/затемнение проигрываем только вперёд
+    applyBlocker(f.blocker, isNew ? f.blockerAnim : null);
+
+    // звук/музыка/тряска только при движении вперёд в новый кадр
+    if (isNew) {
       maxReached = i;
       (f.sounds || []).forEach(function (key) { playSfx(key); });
       if (f.music === "stop") { if (music) { try { music.pause(); } catch (e) {} music = null; } }
       else if (f.music && f.music.key) { playMusic(f.music.key, f.music.volume); }
+      if (f.shake) shakeStage(f.shake);
     }
 
     // текст / субтитр
@@ -511,6 +562,45 @@
       startType(f.text || "");
       logPush(f.name || "", f.text || "");
     }
+  }
+
+  // ---------- эффекты: заливка и тряска ----------
+  function rgbaStr(c) {
+    return "rgba(" + Math.round((c.r || 0) * 255) + "," + Math.round((c.g || 0) * 255) +
+      "," + Math.round((c.b || 0) * 255) + "," + (c.a || 0) + ")";
+  }
+  function applyBlocker(resting, anim) {
+    if (anim && anim.fade > 0 &&
+        (anim.fromA !== anim.toA || anim.fromR !== anim.toR || anim.fromG !== anim.toG || anim.fromB !== anim.toB)) {
+      // вспышка/переход: мгновенно ставим стартовый цвет, затем плавно к конечному
+      el.blocker.style.transition = "none";
+      el.blocker.style.backgroundColor = rgbaStr({ a: anim.fromA, r: anim.fromR, g: anim.fromG, b: anim.fromB });
+      void el.blocker.offsetWidth; // reflow, чтобы старт применился до перехода
+      el.blocker.style.transition = "background-color " + anim.fade + "s linear";
+      el.blocker.style.backgroundColor = rgbaStr({ a: anim.toA, r: anim.toR, g: anim.toG, b: anim.toB });
+    } else {
+      el.blocker.style.transition = "none";
+      el.blocker.style.backgroundColor = rgbaStr(resting || { a: 0 });
+    }
+  }
+  function shakeStage(s) {
+    if (shakeRAF) cancelAnimationFrame(shakeRAF);
+    var ampX = Math.min(35, (s.x || 0) * 6), ampY = Math.min(20, (s.y || 0) * 6);
+    var dur = s.dur > 0 ? s.dur * 1000 : (s.dur === -1 ? 700 : 350);
+    var freq = s.vib || 10;
+    var t0 = performance.now();
+    function tick(now) {
+      var e = now - t0;
+      if (e >= dur) { el.scene.style.transform = ""; shakeRAF = null; return; }
+      var decay = 1 - e / dur;
+      var ph = (e / 1000) * freq;
+      var dx = Math.sin(ph * 6.28) * ampX * decay * (0.6 + Math.random() * 0.4);
+      var dy = Math.cos(ph * 7.0) * ampY * decay * (0.6 + Math.random() * 0.4);
+      // лёгкий зум, чтобы тряска не открывала чёрные края
+      el.scene.style.transform = "scale(1.05) translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px)";
+      shakeRAF = requestAnimationFrame(tick);
+    }
+    shakeRAF = requestAnimationFrame(tick);
   }
 
   // ---------- печатная машинка ----------
@@ -633,20 +723,22 @@
 
   // ---------- стили ----------
   var VN_CSS =
-    "@import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap');" +
+    "@import url('https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@400;500;600;700&display=swap');" +
     '#vnEnter{position:fixed;top:8px;left:120px;z-index:9998;background:rgba(20,26,36,.7);color:#dfe6f2;' +
     'border:1px solid rgba(185,205,235,.3);border-radius:.5em;padding:.35em .8em;font:600 14px Manrope,system-ui,sans-serif;' +
     'cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}' +
     '#vnEnter:hover{background:rgba(42,54,74,.8)}' +
     /* затемнённый фон вокруг окна */
     '#vnRoot{position:fixed;inset:0;z-index:9999;background:#05060a;display:flex;align-items:center;justify-content:center;' +
-    'font-family:"Golos Text",Manrope,system-ui,"Segoe UI",sans-serif;color:#eef2f8;user-select:none}' +
+    'font-family:"Fira Sans Condensed",Manrope,system-ui,"Segoe UI",sans-serif;color:#eef2f8;user-select:none}' +
     '#vnRoot[hidden]{display:none}' +
     /* окно формата телефона 16:9 (max-width можно крутить) */
     '#vnStage{position:relative;aspect-ratio:16/9;width:min(96vw,calc(94vh*16/9));max-width:1500px;' +
     'overflow:hidden;background:#000;box-shadow:0 0 80px rgba(0,0,0,.8)}' +
     '.vnBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s ease}' +
     '.vnBg.show{opacity:1}' +
+    '#vnScene{position:absolute;inset:0;transition:filter .3s ease;will-change:transform,filter}' +
+    '#vnBlocker{position:absolute;inset:0;background-color:rgba(0,0,0,0);pointer-events:none}' +
     '#vnSprites{position:absolute;inset:0;pointer-events:none}' +
     '.vnSlot{position:absolute;inset:0}' +
     '.vnSlot img{position:absolute;width:auto;object-fit:contain;transform:translateX(-50%);' +
@@ -663,10 +755,10 @@
     '#vnTextbox.show{opacity:1}' +
     /* имя слева в колонке (~20% от края), текст правее на той же строке */
     '#vnLine{display:flex;align-items:flex-start;width:100%;padding-left:11%}' +
-    '#vnName{flex:0 0 16%;color:#c4ccd6;font-weight:500;letter-spacing:.02em;padding-right:2%;' +
+    '#vnName{flex:0 0 16%;color:#c4ccd6;font-weight:600;letter-spacing:.02em;padding-right:2%;' +
     'font-size:clamp(13px,1.4vw,20px);line-height:1.55;text-shadow:0 1px 6px #000;text-align:left;' +
     'overflow-wrap:break-word}' +
-    '#vnText{flex:1 1 auto;font-size:clamp(15px,1.65vw,23px);line-height:1.55;min-height:1.55em;' +
+    '#vnText{flex:1 1 auto;font-weight:500;font-size:clamp(15px,1.65vw,23px);line-height:1.55;min-height:1.55em;' +
     'text-shadow:0 1px 8px rgba(0,0,0,.9)}' +
     '#vnLine.noname #vnName{display:none}' +
     '#vnLine.noname{padding-left:20%}' +
