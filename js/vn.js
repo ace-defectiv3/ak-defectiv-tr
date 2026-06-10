@@ -132,6 +132,11 @@
     var grayscale = 0; // текущее обесцвечивание сцены (CameraEffect)
     var filterFade = 0; // длительность перехода фильтра
     var blocker = { a: 0, r: 0, g: 0, b: 0 }; // заливка покоя (Blocker)
+    var curtain = 0, curtainFade = 0; // доля чёрных полос сверху/снизу
+    var focusBg = 0, focusChar = 0, focusFade = 0; // расфокус фона/персонажей
+    var bgTf = { x: 0, y: 0, s: 1 }; // трансформация фона покоя (BackgroundTween)
+    var pendingBgTween = null; // анимация проезда фона
+    var pendingSticker = null; // текстовый стикер на кадр
     var pendingShake = null; // тряска на следующий кадр
     var pendingBlockerAnim = null; // анимация заливки (вспышка/затемнение)
     var pendingSounds = [];
@@ -155,6 +160,14 @@
         blocker: { a: blocker.a, r: blocker.r, g: blocker.g, b: blocker.b },
         blockerAnim: pendingBlockerAnim,
         shake: pendingShake,
+        curtain: curtain,
+        curtainFade: curtainFade,
+        focusBg: focusBg,
+        focusChar: focusChar,
+        focusFade: focusFade,
+        bgTf: { x: bgTf.x, y: bgTf.y, s: bgTf.s },
+        bgTween: pendingBgTween,
+        sticker: pendingSticker,
         name: "",
         text: "",
         subtitle: null,
@@ -167,7 +180,10 @@
       pendingMusic = null;
       pendingBlockerAnim = null;
       pendingShake = null;
+      pendingBgTween = null;
+      pendingSticker = null;
       filterFade = 0;
+      curtainFade = 0;
     }
 
     for (var li = 0; li < lines.length; li++) {
@@ -224,7 +240,7 @@
             else focusSlot = SLOT[fv] || slot;
           }
         } else if (cmd === "background") {
-          if (args.image) bg = args.image;
+          if (args.image) { bg = args.image; bgTf = { x: 0, y: 0, s: 1 }; }
         } else if (cmd === "image") {
           // CG-иллюстрация во весь экран; [Image] без image -> убрать
           if (args.image)
@@ -257,6 +273,36 @@
             toA: ba, toR: br, toG: bg2, toB: bb,
             fade: parseFloat(args.fadetime || "0") || 0,
           };
+        } else if (cmd === "curtain") {
+          var cf = args.fillto != null ? parseFloat(args.fillto) : (args.fill != null ? parseFloat(args.fill) : 0);
+          curtain = isNaN(cf) ? 0 : cf;
+          curtainFade = parseFloat(args.fadetime || "0") || 0;
+        } else if (cmd === "focusout") {
+          var ft = (args.type || "").toLowerCase();
+          var amt = parseFloat(args.to != null ? args.to : "0") || 0;
+          if (ft === "bg") focusBg = amt;
+          else if (ft === "char") focusChar = amt;
+          focusFade = parseFloat(args.duration || "0") || 0;
+        } else if (cmd === "backgroundtween") {
+          var txTo = args.xto != null ? parseFloat(args.xto) : bgTf.x;
+          var tyTo = args.yto != null ? parseFloat(args.yto) : bgTf.y;
+          var tsTo = args.xscaleto != null ? parseFloat(args.xscaleto) : bgTf.s;
+          pendingBgTween = {
+            fromX: args.xfrom != null ? parseFloat(args.xfrom) : bgTf.x,
+            fromY: args.yfrom != null ? parseFloat(args.yfrom) : bgTf.y,
+            fromS: bgTf.s,
+            toX: txTo, toY: tyTo, toS: tsTo,
+            dur: parseFloat(args.duration || "0") || 0,
+          };
+          bgTf = { x: txTo, y: tyTo, s: tsTo };
+        } else if (cmd === "sticker") {
+          if (args.text)
+            pendingSticker = {
+              text: args.text,
+              x: parseFloat(args.x || "0") || 0,
+              y: parseFloat(args.y || "0") || 0,
+              size: parseFloat(args.size || "24") || 24,
+            };
         } else if (cmd === "playmusic") {
           pendingMusic = { key: args.key, volume: parseFloat(args.volume || "0.6") };
         } else if (cmd === "stopmusic") {
@@ -371,12 +417,14 @@
     root.innerHTML =
       '<div id="vnStage">' +
         '<div id="vnScene">' +
-          '<div id="vnBgA" class="vnBg"></div>' +
-          '<div id="vnBgB" class="vnBg"></div>' +
+          '<div id="vnBgWrap"><div id="vnBgA" class="vnBg"></div><div id="vnBgB" class="vnBg"></div></div>' +
           '<div id="vnSprites"><div class="vnSlot left"></div><div class="vnSlot center"></div><div class="vnSlot right"></div></div>' +
           '<div id="vnCG"></div>' +
         "</div>" +
         '<div id="vnBlocker"></div>' +
+        '<div id="vnCurtainTop" class="vnCurtain"></div>' +
+        '<div id="vnCurtainBottom" class="vnCurtain"></div>' +
+        '<div id="vnSticker"></div>' +
         '<div id="vnSubtitle"></div>' +
         '<div id="vnTextbox"><div id="vnLine"><div id="vnName"></div><div id="vnText"></div></div></div>' +
         '<div id="vnBarL">' +
@@ -403,6 +451,11 @@
     el.bgActive = el.bgA;
     el.scene = root.querySelector("#vnScene");
     el.blocker = root.querySelector("#vnBlocker");
+    el.sprites = root.querySelector("#vnSprites");
+    el.bgWrap = root.querySelector("#vnBgWrap");
+    el.curtainTop = root.querySelector("#vnCurtainTop");
+    el.curtainBottom = root.querySelector("#vnCurtainBottom");
+    el.sticker = root.querySelector("#vnSticker");
     el.slots = {
       left: root.querySelector(".vnSlot.left"),
       center: root.querySelector(".vnSlot.center"),
@@ -539,6 +592,42 @@
     // заливка (Blocker): покой ставим всегда, вспышку/затемнение проигрываем только вперёд
     applyBlocker(f.blocker, isNew ? f.blockerAnim : null);
 
+    // проезд/наезд фона (BackgroundTween) + расфокус фона (focusout type=bg)
+    var bgFilter = f.focusBg > 0
+      ? "blur(" + (f.focusBg * 6).toFixed(1) + "px) brightness(" + (1 - f.focusBg * 0.45).toFixed(2) + ")"
+      : "none";
+    if (isNew && f.bgTween && f.bgTween.dur > 0) {
+      el.bgWrap.style.transition = "none";
+      el.bgWrap.style.transform = bgTransformStr(f.bgTween.fromX, f.bgTween.fromY, f.bgTween.fromS);
+      void el.bgWrap.offsetWidth;
+      el.bgWrap.style.transition = "transform " + f.bgTween.dur + "s ease,filter " + (f.focusFade || 0) + "s ease";
+      el.bgWrap.style.transform = bgTransformStr(f.bgTf.x, f.bgTf.y, f.bgTf.s);
+    } else {
+      el.bgWrap.style.transition = "transform 0s,filter " + (f.focusFade || 0) + "s ease";
+      el.bgWrap.style.transform = bgTransformStr(f.bgTf.x, f.bgTf.y, f.bgTf.s);
+    }
+    el.bgWrap.style.filter = bgFilter;
+
+    // расфокус персонажей (focusout type=char)
+    el.sprites.style.transition = "filter " + (f.focusFade || 0) + "s ease";
+    el.sprites.style.filter = f.focusChar > 0
+      ? "blur(" + (f.focusChar * 5).toFixed(1) + "px) brightness(" + (1 - f.focusChar * 0.4).toFixed(2) + ")"
+      : "none";
+
+    // шторки (curtain): чёрные полосы сверху и снизу
+    var ch = (f.curtain || 0) * 100;
+    el.curtainTop.style.transition = el.curtainBottom.style.transition = "height " + (f.curtainFade || 0) + "s ease";
+    el.curtainTop.style.height = el.curtainBottom.style.height = ch + "%";
+
+    // текстовый стикер
+    if (f.sticker && f.sticker.text) {
+      el.sticker.innerHTML = formatText(f.sticker.text);
+      el.sticker.style.fontSize = Math.round((f.sticker.size || 24) * 1.1) + "px";
+      el.sticker.classList.add("show");
+    } else {
+      el.sticker.classList.remove("show");
+    }
+
     // звук/музыка/тряска только при движении вперёд в новый кадр
     if (isNew) {
       maxReached = i;
@@ -565,6 +654,9 @@
   }
 
   // ---------- эффекты: заливка и тряска ----------
+  function bgTransformStr(x, y, s) {
+    return "translate(" + (x / REF_W * 100).toFixed(2) + "%," + (y / REF_H * 100).toFixed(2) + "%) scale(" + (s || 1) + ")";
+  }
   function rgbaStr(c) {
     return "rgba(" + Math.round((c.r || 0) * 255) + "," + Math.round((c.g || 0) * 255) +
       "," + Math.round((c.b || 0) * 255) + "," + (c.a || 0) + ")";
@@ -738,7 +830,13 @@
     '.vnBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s ease}' +
     '.vnBg.show{opacity:1}' +
     '#vnScene{position:absolute;inset:0;transition:filter .3s ease;will-change:transform,filter}' +
+    '#vnBgWrap{position:absolute;inset:0;transform-origin:center;will-change:transform,filter}' +
     '#vnBlocker{position:absolute;inset:0;background-color:rgba(0,0,0,0);pointer-events:none}' +
+    '.vnCurtain{position:absolute;left:0;right:0;height:0;background:#000;pointer-events:none}' +
+    '#vnCurtainTop{top:0}#vnCurtainBottom{bottom:0}' +
+    '#vnSticker{position:absolute;left:50%;top:30%;transform:translateX(-50%);max-width:80%;text-align:center;' +
+    'text-shadow:0 2px 12px #000;opacity:0;transition:opacity .3s;pointer-events:none;font-weight:600}' +
+    '#vnSticker.show{opacity:1}' +
     '#vnSprites{position:absolute;inset:0;pointer-events:none}' +
     '.vnSlot{position:absolute;inset:0}' +
     '.vnSlot img{position:absolute;width:auto;object-fit:contain;transform:translateX(-50%);' +
