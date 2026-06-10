@@ -53,44 +53,36 @@
     var body = ((m[3] || "1").replace(/^0+/, "")) || "1";
     var full = id + "#" + face + "$" + body;
     var variants = [name, full, id + "#" + face, id + "$" + body, id + "#1$1", id];
+    // Aceship на jsdelivr — операторы; akgcc через raw.githubusercontent — NPC и остальное
+    // (jsdelivr не отдаёт файлы из огромного репозитория akgcc, поэтому для него только raw)
     var ACE = "https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/characters/";
-    var AKG = "https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/assets/avg/characters/";
+    var AKG_RAW = "https://raw.githubusercontent.com/akgcc/arkdata/main/assets/avg/characters/";
     var seen = {}, out = [];
     variants.forEach(function (v) {
       if (!v || seen[v]) return;
       seen[v] = 1;
       var enc = encodeURIComponent(v);
-      out.push(AKG + enc.toLowerCase() + ".png"); // akgcc CDN — полный датасет (операторы и NPC)
-      out.push(ACE + enc + ".png"); // Aceship CDN — запасной
+      out.push(ACE + enc + ".png"); // операторы (быстрый CDN)
+      out.push(AKG_RAW + enc.toLowerCase() + ".png"); // NPC и всё остальное
     });
-    // последний резерв: thumb-webp (как у ридера) — хуже качеством, но не пусто
-    out.push("https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/thumbs/" + encodeURIComponent(full).toLowerCase() + ".webp");
+    out.push("https://raw.githubusercontent.com/akgcc/arkdata/main/thumbs/" + encodeURIComponent(full).toLowerCase() + ".webp");
     return out;
   }
   function bgUrls(image) {
     var enc = encodeURIComponent(image);
-    var out = [];
-    try {
-      if (typeof uri_background === "function" && typeof ASSET_SOURCE !== "undefined") {
-        out.push(uri_background(image, ASSET_SOURCE.LOCAL)); // akgcc CDN (полный датасет)
-        out.push(uri_background(image, ASSET_SOURCE.ACESHIP)); // Aceship CDN запасной
-      }
-    } catch (e) {}
-    out.push("https://cdn.jsdelivr.net/gh/akgcc/arkdata@main/assets/torappu/dynamicassets/avg/backgrounds/" + enc.toLowerCase() + ".png");
-    out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/backgrounds/" + enc + ".png");
-    return out.filter(Boolean);
+    var lc = enc.toLowerCase();
+    return [
+      "https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/backgrounds/" + enc + ".png",
+      "https://raw.githubusercontent.com/akgcc/arkdata/main/assets/torappu/dynamicassets/avg/backgrounds/" + lc + ".png",
+    ];
   }
   function cgUrls(image) {
     var enc = encodeURIComponent(image);
-    var out = [];
-    try {
-      if (typeof uri_image === "function" && typeof ASSET_SOURCE !== "undefined") {
-        out.push(uri_image(image, ASSET_SOURCE.LOCAL)); // akgcc CDN
-        out.push(uri_image(image, ASSET_SOURCE.ACESHIP)); // Aceship CDN запасной
-      }
-    } catch (e) {}
-    out.push("https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/images/" + enc + ".png");
-    return out.filter(Boolean);
+    var lc = enc.toLowerCase();
+    return [
+      "https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/images/" + enc + ".png",
+      "https://raw.githubusercontent.com/akgcc/arkdata/main/assets/torappu/dynamicassets/avg/images/" + lc + ".png",
+    ];
   }
   function soundUrls(key) {
     var soundkey = String(key).replace(/^\$/, "");
