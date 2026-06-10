@@ -221,6 +221,9 @@
           if (args.name) {
             if (!cur[slot]) cur[slot] = { name: args.name, scale: 1, x: 0, y: 0, alpha: 1 };
             else cur[slot].name = args.name;
+            // показ/смена персонажа: по умолчанию снова видим (сбрасываем залипшую прозрачность от ушедшего ato=0),
+            // если только команда явно не задаёт конечную прозрачность через ato
+            if (args.ato === undefined) cur[slot].alpha = 1;
           }
           if (cur[slot]) {
             if (args.scale !== undefined) cur[slot].scale = parseFloat(args.scale) || 1;
