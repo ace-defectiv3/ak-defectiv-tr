@@ -135,6 +135,8 @@
     var focusBg = 0, focusChar = 0, focusFade = 0; // расфокус фона/персонажей
     var bgTf = { x: 0, y: 0, s: 1 }; // трансформация фона покоя (BackgroundTween)
     var grid = null; // панорама gridbg: {imgs,w,h,x,y,fade} | null
+    var largeY = 0; // вертикальная позиция largebgtween (игровые единицы)
+    var pendingLargeTween = null; // {yFrom,yTo,dur} вертикальный проезд
     var pendingBgTween = null; // анимация проезда фона
     var pendingSticker = null; // текстовый стикер на кадр
     var pendingShake = null; // тряска на следующий кадр
@@ -167,6 +169,8 @@
         focusFade: focusFade,
         bgTf: { x: bgTf.x, y: bgTf.y, s: bgTf.s },
         grid: grid ? { imgs: grid.imgs.slice(), w: grid.w, h: grid.h, x: grid.x, y: grid.y, fade: grid.fade } : null,
+        largeY: largeY,
+        largeTween: pendingLargeTween,
         bgTween: pendingBgTween,
         sticker: pendingSticker,
         name: "",
@@ -182,6 +186,7 @@
       pendingBlockerAnim = null;
       pendingShake = null;
       pendingBgTween = null;
+      pendingLargeTween = null;
       pendingSticker = null;
       filterFade = 0;
       curtainFade = 0;
@@ -244,10 +249,10 @@
             else focusSlot = SLOT[fv] || slot;
           }
         } else if (cmd === "background") {
-          if (args.image) { bg = args.image; bgTf = { x: 0, y: 0, s: 1 }; grid = null; }
+          if (args.image) { bg = args.image; bgTf = { x: 0, y: 0, s: 1 }; grid = null; largeY = 0; }
         } else if (cmd === "gridbg") {
           if (!args.imagegroup) {
-            grid = null; // пустой [gridbg] -> убрать панораму
+            grid = null; largeY = 0; // пустой [gridbg] -> убрать панораму
           } else {
             var ws = String(args.solidwidth || "").split("/");
             var hs = String(args.solidheight || "").split("/");
@@ -260,6 +265,11 @@
               fade: parseFloat(args.fadetime || "0") || 0,
             };
           }
+        } else if (cmd === "largebgtween") {
+          var lyf = args.yfrom != null ? parseFloat(args.yfrom) : largeY;
+          var lyt = args.yto != null ? parseFloat(args.yto) : largeY;
+          pendingLargeTween = { yFrom: lyf, yTo: lyt, dur: parseFloat(args.duration || "0") || 0 };
+          largeY = lyt;
         } else if (cmd === "image") {
           // CG-иллюстрация во весь экран; [Image] без image -> убрать
           if (args.image)
@@ -635,6 +645,9 @@
         el.grid.style.height = (Z * 100) + "%";
         el.grid.style.left = ((100 - Z * 100) / 2) + "%";
         el.grid.style.top = ((100 - Z * 100) / 2) + "%";
+        var lift = document.createElement("div");
+        lift.id = "vnGridLift";
+        lift.style.cssText = "position:absolute;inset:0";
         var inner = document.createElement("div");
         inner.id = "vnGridInner";
         g.imgs.forEach(function (nm, idx) {
@@ -647,12 +660,28 @@
           setImgWithFallback(t, cTile && us[0] !== cTile ? [cTile].concat(us) : us);
           inner.appendChild(t);
         });
+        lift.appendChild(inner);
         el.grid.innerHTML = "";
-        el.grid.appendChild(inner);
+        el.grid.appendChild(lift);
+        el.gridLift = lift;
         el.grid.dataset.sig = sig;
         el.grid.style.transition = "none";
         el.grid.style.transform = tf;
         void el.grid.offsetWidth; // reflow, чтобы стартовое положение не проезжало
+      }
+      // largebgtween: медленный вертикальный проезд неба (отдельный слой, чтобы не мешать дрейфу и x-проезду)
+      if (el.gridLift) {
+        if (isNew && f.largeTween && f.largeTween.dur > 0.1) {
+          el.gridLift.getAnimations().forEach(function (a) { a.cancel(); });
+          el.gridLift.animate(
+            [{ transform: "translateY(" + mapLargeY(f.largeTween.yFrom) + "%)" },
+             { transform: "translateY(" + mapLargeY(f.largeTween.yTo) + "%)" }],
+            { duration: f.largeTween.dur * 1000, fill: "forwards", easing: "linear" }
+          );
+        } else if (!f.largeTween) {
+          el.gridLift.getAnimations().forEach(function (a) { a.cancel(); });
+          el.gridLift.style.transform = "translateY(" + mapLargeY(f.largeY) + "%)";
+        }
       }
       // data-проезд по x,y и плавное появление (постоянный дрейф идёт на внутреннем слое)
       el.grid.style.transition = "transform " + g.fade + "s ease, opacity " + g.fade + "s ease";
@@ -730,6 +759,10 @@
   }
 
   // ---------- эффекты: заливка и тряска ----------
+  function mapLargeY(y) {
+    // игровая вертикаль largebgtween (~0..900, центр ~450) -> сдвиг слоя, %
+    return Math.max(-6, Math.min(6, ((y - 450) / 900) * 6));
+  }
   function bgTransformStr(x, y, s) {
     return "translate(" + (x / REF_W * 100).toFixed(2) + "%," + (y / REF_H * 100).toFixed(2) + "%) scale(" + (s || 1) + ")";
   }
