@@ -622,21 +622,21 @@
     if (f.grid) {
       var g = f.grid;
       var cols = 2, rows = Math.ceil(g.imgs.length / cols);
-      var Z = 1.35; // лёгкий зум-запас, чтобы проезд не оголял края
-      var over = (Z - 1) / 2 * 100; // запас с каждой стороны, %
-      var maxPan = over - 2; // предел проезда с небольшим зазором
-      // x,y из игровых единиц -> проезд: половина панорамы соответствует maxPan
-      var px = Math.max(-over, Math.min(over, (g.x / (cols * g.w / 2)) * maxPan));
-      var py = Math.max(-over, Math.min(over, (g.y / (rows * g.h / 2)) * maxPan));
+      var Z = 1.6; // зум-запас: панорама шире сцены, чтобы был ход для проезда и дрейфа
+      // сдвиг translate в % считается от размера #vnGrid (Z*100% сцены), поэтому делим на Z
+      var maxStage = (Z - 1) / 2 * 100; // запас краёв в % сцены (~30%)
+      var panStage = Math.max(-(maxStage - 6), Math.min(maxStage - 6, (g.x / (cols * g.w / 2)) * 18)); // data-проезд по сцене, %
+      var px = panStage / Z, py = (Math.max(-(maxStage - 6), Math.min(maxStage - 6, (g.y / (rows * g.h / 2)) * 18))) / Z;
       var tf = "translate(" + px.toFixed(2) + "%," + py.toFixed(2) + "%)";
       var sig = g.imgs.join("|") + ":" + cols + "x" + rows;
       if (el.grid.dataset.sig !== sig) {
-        // новая панорама: пересобираем тайлы и ставим позицию без проезда
-        el.grid.innerHTML = "";
+        // новая панорама: пересобираем тайлы внутри дрейфующего слоя
         el.grid.style.width = (Z * 100) + "%";
         el.grid.style.height = (Z * 100) + "%";
         el.grid.style.left = ((100 - Z * 100) / 2) + "%";
         el.grid.style.top = ((100 - Z * 100) / 2) + "%";
+        var inner = document.createElement("div");
+        inner.id = "vnGridInner";
         g.imgs.forEach(function (nm, idx) {
           var col = idx % cols, row = Math.floor(idx / cols);
           var t = document.createElement("img");
@@ -645,14 +645,16 @@
           var cTile = assetCache["bg:" + nm];
           var us = bgUrls(nm);
           setImgWithFallback(t, cTile && us[0] !== cTile ? [cTile].concat(us) : us);
-          el.grid.appendChild(t);
+          inner.appendChild(t);
         });
+        el.grid.innerHTML = "";
+        el.grid.appendChild(inner);
         el.grid.dataset.sig = sig;
         el.grid.style.transition = "none";
         el.grid.style.transform = tf;
         void el.grid.offsetWidth; // reflow, чтобы стартовое положение не проезжало
       }
-      // проезд по x,y и плавное появление
+      // data-проезд по x,y и плавное появление (постоянный дрейф идёт на внутреннем слое)
       el.grid.style.transition = "transform " + g.fade + "s ease, opacity " + g.fade + "s ease";
       el.grid.style.transform = tf;
       el.grid.style.opacity = "1";
@@ -906,6 +908,8 @@
     '#vnScene{position:absolute;inset:0;transition:filter .3s ease;will-change:transform,filter}' +
     '#vnBgWrap{position:absolute;inset:0;transform-origin:center;will-change:transform,filter}' +
     '#vnGrid{position:absolute;opacity:0;pointer-events:none;will-change:transform,opacity}' +
+    '#vnGridInner{position:absolute;inset:0;animation:vnGridDrift 32s ease-in-out infinite}' +
+    '@keyframes vnGridDrift{0%{transform:translate(-3%,-1.5%)}50%{transform:translate(3%,1.5%)}100%{transform:translate(-3%,-1.5%)}}' +
     '#vnGrid img{display:block}' +
     '#vnBlocker{position:absolute;inset:0;background-color:rgba(0,0,0,0);pointer-events:none}' +
     '.vnCurtain{position:absolute;left:0;right:0;height:0;background:#000;pointer-events:none}' +
