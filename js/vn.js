@@ -23,7 +23,7 @@
   var REF_CANVAS_H = 1024; // эталонный размер холста (даёт высоту BASE_H)
   var BASE_H = 114;   // базовая высота для эталонного холста, % высоты кадра
   var CANVAS_INFLUENCE = 1; // 1 = рост строго по размеру холста (=росту персонажа в игре)
-  var SIZE_MIN = 0.45, SIZE_MAX = 1.15; // пол и потолок: мелкие не исчезают, крупные не теряют голову
+  var SIZE_MIN = 0.45, SIZE_MAX = 1.25; // пол и потолок: мелкие не исчезают, крупные не теряют голову
   var BASE_BOTTOM = -42; // насколько низ холста уходит за нижний край, %
   var spriteNatH = {}; // родная высота холста спрайта в пикселях (из предзагрузки)
 
@@ -149,7 +149,7 @@
       function snapSlot(slot) {
         var s = cur[slot];
         if (!s) return null;
-        return { name: s.name, scale: s.scale, x: s.x, y: s.y, alpha: s.alpha,
+        return { name: s.name, scale: s.scale, x: s.x, y: s.y, alpha: s.alpha, shadow: s.shadow || 0,
                  dim: !!(focusSlot && focusSlot !== slot) };
       }
       var snap = { left: snapSlot("left"), center: snapSlot("center"), right: snapSlot("right") };
@@ -226,6 +226,12 @@
           }
           var slot = SLOT[(args.slot || "").toLowerCase()] || "center";
           if (args.name) {
+            // защита от дублей: убираем того же персонажа из других слотов (он переехал, а не размножился)
+            var bn = args.name.split("#")[0].split("$")[0];
+            ["left", "center", "right"].forEach(function (sl) {
+              if (sl !== slot && cur[sl] && cur[sl].name &&
+                  cur[sl].name.split("#")[0].split("$")[0] === bn) cur[sl] = null;
+            });
             if (!cur[slot]) cur[slot] = { name: args.name, scale: 1, x: 0, y: 0, alpha: 1 };
             else cur[slot].name = args.name;
             // показ/смена персонажа: по умолчанию снова видим (сбрасываем залипшую прозрачность от ушедшего ato=0),
@@ -242,10 +248,18 @@
               cur[slot].y = parseFloat(pp[1]) || 0;
             }
             if (args.ato !== undefined) cur[slot].alpha = parseFloat(args.ato);
+            // тень-силуэт: градиентное затемнение спрайта (скрывает лицо у загадочных фигур)
+            var blk = args.blackend != null ? args.blackend
+              : args.bend != null ? args.bend
+              : args.blackend2 != null ? args.blackend2
+              : args.black != null ? args.black : undefined;
+            if (blk !== undefined) cur[slot].shadow = (String(blk) === "true") ? 1 : (parseFloat(blk) || 0);
+            else if (args.name) cur[slot].shadow = 0; // обычный показ персонажа -> без тени
           }
           if (args.focus !== undefined) {
             var fv = String(args.focus).toLowerCase();
-            if (fv === "none" || fv === "n" || fv === "-1") focusSlot = null;
+            // none -> фокуса нет; all -> подсвечены все. И то, и другое = никого не затемняем
+            if (fv === "none" || fv === "n" || fv === "-1" || fv === "all" || fv === "a") focusSlot = null;
             else focusSlot = SLOT[fv] || slot;
           }
         } else if (cmd === "background") {
@@ -601,9 +615,14 @@
           spriteNatH[spName] = this.naturalHeight; // уточняем реальную высоту холста
           var sf = Math.min(SIZE_MAX, Math.max(SIZE_MIN, 1 + CANVAS_INFLUENCE * (this.naturalHeight / REF_CANVAS_H - 1)));
           this.style.height = BASE_H * sf * spScale + "%";
+          var shEl = this.parentElement && this.parentElement.querySelector(".vnShadow");
+          if (shEl) { var u = 'url("' + (this.currentSrc || this.src) + '")'; shEl.style.webkitMaskImage = u; shEl.style.maskImage = u; shEl.dataset.mask = this.currentSrc || this.src; }
         };
         setImgWithFallback(img, urls);
         box.appendChild(img);
+        var shadow = document.createElement("div");
+        shadow.className = "vnShadow";
+        box.appendChild(shadow);
         box.dataset.name = sp.name;
       }
       var xPct = SLOT_X[slot] + (sp.x / REF_W) * 100;
@@ -617,6 +636,26 @@
       img.style.bottom = b + "%";
       img.style.opacity = sp.alpha == null ? 1 : sp.alpha;
       img.style.filter = sp.dim ? "brightness(.5) saturate(.8)" : "none";
+      // тень-силуэт: градиент, маскированный формой спрайта (темнее у головы)
+      var sh = box.querySelector(".vnShadow");
+      if (sh) {
+        if (sp.shadow > 0) {
+          sh.style.left = xPct + "%";
+          sh.style.bottom = b + "%";
+          sh.style.height = h + "%";
+          sh.style.width = h * (REF_H / REF_W) + "%"; // спрайт квадратный -> ширина = высота в px
+          sh.style.opacity = sp.dim ? 0.65 : 1;
+          sh.style.background = "linear-gradient(to bottom, rgba(0,0,0," + sp.shadow + ") 0%, rgba(0,0,0," +
+            (sp.shadow * 0.92).toFixed(2) + ") 24%, rgba(0,0,0,0) 60%)";
+          var ssrc = img.currentSrc || img.src;
+          if (ssrc && sh.dataset.mask !== ssrc) {
+            var um = 'url("' + ssrc + '")'; sh.style.webkitMaskImage = um; sh.style.maskImage = um; sh.dataset.mask = ssrc;
+          }
+          sh.style.display = "block";
+        } else {
+          sh.style.display = "none";
+        }
+      }
     });
 
     // CG-иллюстрация во весь экран
@@ -954,6 +993,9 @@
     '.vnSlot{position:absolute;inset:0}' +
     '.vnSlot img{position:absolute;width:auto;object-fit:contain;transform:translateX(-50%);' +
     'transition:left .4s ease,bottom .4s ease,height .4s ease,opacity .4s ease,filter .3s ease}' +
+    '.vnSlot .vnShadow{position:absolute;display:none;transform:translateX(-50%);pointer-events:none;' +
+    '-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;' +
+    'transition:left .4s ease,bottom .4s ease,height .4s ease,opacity .4s ease}' +
     '#vnCG{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .45s ease}' +
     '#vnCG.show{opacity:1}' +
     '#vnSubtitle{position:absolute;top:40%;left:50%;transform:translateX(-50%);max-width:74%;text-align:center;' +
