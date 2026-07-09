@@ -145,6 +145,9 @@
     var largeY = 0; // вертикальная позиция largebgtween (игровые единицы)
     var pendingLargeTween = null; // {yFrom,yTo,dur} вертикальный проезд
     var cgItems = {}; // активные слои cgitem по имени картинки
+    var runningDelay = 0; // накопленные [Delay] внутри страницы, сек
+    var pendingCgEvents = []; // план событий cgitem на страницу: {at,type,...}
+    var pendingImgTween = null; // проезд/зум полноэкранной CG
     var pendingBgTween = null; // анимация проезда фона
     var pendingSticker = null; // текстовый стикер на кадр
     var pendingShake = null; // тряска на следующий кадр
@@ -163,7 +166,7 @@
       var snap = { left: snapSlot("left"), center: snapSlot("center"), right: snapSlot("right") };
       var f = {
         bg: bg,
-        cg: cg,
+        cg: cg ? { image: cg.image, x: cg.x, y: cg.y, sx: cg.sx, sy: cg.sy } : null,
         sprites: snap,
         grayscale: grayscale,
         filterFade: filterFade,
@@ -182,6 +185,8 @@
         cgItems: Object.keys(cgItems).map(function (k) {
           var c = cgItems[k]; var o = {}; for (var p in c) o[p] = c[p]; return o;
         }),
+        cgEvents: pendingCgEvents,
+        imgTween: pendingImgTween,
         bgTween: pendingBgTween,
         sticker: pendingSticker,
         name: "",
@@ -198,6 +203,9 @@
       pendingShake = null;
       pendingBgTween = null;
       pendingLargeTween = null;
+      pendingCgEvents = [];
+      pendingImgTween = null;
+      runningDelay = 0;
       pendingSticker = null;
       filterFade = 0;
       curtainFade = 0;
@@ -275,10 +283,12 @@
           }
         } else if (cmd === "background") {
           if (args.image) { bg = args.image; bgTf = { x: 0, y: 0, s: 1 }; grid = null; largeY = 0; cgItems = {}; }
+        } else if (cmd === "delay") {
+          runningDelay += parseFloat(args.time || "0") || 0;
         } else if (cmd === "cgitem") {
           if (args.image) {
             var pf = String(args.pfrom || "0,0").split(","), pt = String(args.pto || args.pfrom || "0,0").split(",");
-            cgItems[args.image] = {
+            var cgi = {
               image: args.image,
               sfrom: args.sfrom != null ? parseFloat(args.sfrom) : 1,
               sto: args.sto != null ? parseFloat(args.sto) : (args.sfrom != null ? parseFloat(args.sfrom) : 1),
@@ -291,10 +301,14 @@
               pdur: parseFloat(args.pduration || "0") || 0,
               layer: parseInt(args.layer || "1", 10) || 1,
             };
+            cgItems[args.image] = cgi;
+            pendingCgEvents.push({ at: runningDelay, type: "show", it: cgi });
           }
         } else if (cmd === "hidecgitem") {
+          var hcFade = parseFloat(args.fadetime || "0.3") || 0.3;
           if (args.image) delete cgItems[args.image];
           else cgItems = {};
+          pendingCgEvents.push({ at: runningDelay, type: "hide", image: args.image || null, fade: hcFade });
         } else if (cmd === "gridbg") {
           if (!args.imagegroup) {
             grid = null; largeY = 0; // пустой [gridbg] -> убрать панораму
@@ -317,14 +331,32 @@
           largeY = lyt;
         } else if (cmd === "image") {
           // CG-иллюстрация во весь экран; [Image] без image -> убрать
-          if (args.image)
+          if (args.image) {
+            var isx = parseFloat(args.xscale || args.scale || "1") || 1;
             cg = {
               image: args.image,
               x: parseFloat(args.x || "0") || 0,
               y: parseFloat(args.y || "0") || 0,
-              scale: parseFloat(args.xscale || args.scale || "1") || 1,
+              sx: isx,
+              sy: parseFloat(args.yscale || "0") || isx,
             };
-          else cg = null;
+          } else cg = null;
+        } else if (cmd === "imagetween") {
+          // проезд/зум полноэкранной CG; недостающие значения берём из текущего состояния
+          if (cg) {
+            var txf = args.xfrom != null ? parseFloat(args.xfrom) : cg.x;
+            var txt = args.xto != null ? parseFloat(args.xto) : txf;
+            var tyf = args.yfrom != null ? parseFloat(args.yfrom) : cg.y;
+            var tyt = args.yto != null ? parseFloat(args.yto) : tyf;
+            var tsxf = args.xscalefrom != null ? parseFloat(args.xscalefrom) : cg.sx;
+            var tsxt = args.xscaleto != null ? parseFloat(args.xscaleto) : tsxf;
+            var tsyf = args.yscalefrom != null ? parseFloat(args.yscalefrom) : cg.sy;
+            var tsyt = args.yscaleto != null ? parseFloat(args.yscaleto) : tsyf;
+            pendingImgTween = { xf: txf, xt: txt, yf: tyf, yt: tyt,
+              sxf: tsxf, sxt: tsxt, syf: tsyf, syt: tsyt,
+              dur: parseFloat(args.duration || "0") || 0 };
+            cg.x = txt; cg.y = tyt; cg.sx = tsxt; cg.sy = tsyt; // состояние покоя после проезда
+          }
         } else if (cmd === "camerashake") {
           var xs = parseFloat(args.xstrength || "0"), ys = parseFloat(args.ystrength || "0");
           if (xs || ys)
@@ -464,6 +496,9 @@
       });
       if (f.cgItems) f.cgItems.forEach(function (it) {
         if (!seen["cgi:" + it.image]) { seen["cgi:" + it.image] = 1; jobs.push({ key: "cgi:" + it.image, urls: cgItemUrls(it.image) }); }
+      });
+      if (f.cgEvents) f.cgEvents.forEach(function (ev) {
+        if (ev.type === "show" && !seen["cgi:" + ev.it.image]) { seen["cgi:" + ev.it.image] = 1; jobs.push({ key: "cgi:" + ev.it.image, urls: cgItemUrls(ev.it.image) }); }
       });
       ["left", "center", "right"].forEach(function (s) {
         var sp = f.sprites[s];
@@ -671,7 +706,7 @@
       img.style.height = h + "%";
       img.style.bottom = b + "%";
       img.style.opacity = sp.alpha == null ? 1 : sp.alpha;
-      img.style.filter = sp.dim ? "brightness(.5) saturate(.8)" : "none";
+      img.style.filter = sp.dim ? "brightness(.35) saturate(.75)" : "none";
       // тень-силуэт: градиент, маскированный формой спрайта (темнее у головы)
       var sh = box.querySelector(".vnShadow");
       if (sh) {
@@ -699,8 +734,24 @@
       var cgurl = assetCache["cg:" + f.cg.image] || cgUrls(f.cg.image)[0];
       el.cg.style.backgroundImage = 'url("' + cgurl + '")';
       el.cg.classList.add("show");
+      // проезд/зум CG (ImageTween): играем один раз при входе в кадр, иначе состояние покоя
+      if (isNew && f.imgTween && f.imgTween.dur > 0.05) {
+        var iw = f.imgTween;
+        el.cg.getAnimations().forEach(function (a) { a.cancel(); });
+        el.cg.animate(
+          [{ transform: cgTfStr(iw.xf, iw.yf, iw.sxf, iw.syf) },
+           { transform: cgTfStr(iw.xt, iw.yt, iw.sxt, iw.syt) }],
+          { duration: iw.dur * 1000, fill: "forwards", easing: "ease-out" }
+        );
+      } else if (!(f.imgTween && el.cg.getAnimations().length)) {
+        // покой; идущий проезд этой CG не сбиваем при перерисовке того же кадра
+        el.cg.getAnimations().forEach(function (a) { a.cancel(); });
+        el.cg.style.transform = cgTfStr(f.cg.x, f.cg.y, f.cg.sx, f.cg.sy);
+      }
     } else {
       el.cg.classList.remove("show");
+      el.cg.getAnimations().forEach(function (a) { a.cancel(); });
+      el.cg.style.transform = "";
     }
 
     // панорама gridbg (2 столбца, тайлы L1/R1/L2/R2 ...); те же пропорции 16:9, что у сцены
@@ -767,7 +818,7 @@
     }
 
     // cgitem: многослойная анимированная CG
-    renderCgItems(f.cgItems || [], isNew);
+    renderCgItems(f, isNew);
 
     // фильтр камеры (обесцвечивание) — состояние, ставим всегда
     el.scene.style.transitionDuration = (f.filterFade || 0) + "s";
@@ -838,58 +889,97 @@
 
   // ---------- cgitem: слои анимированной CG ----------
   var CG_REF_W = 1280, CG_REF_H = 720;
-  function sizeCgImg(im, it) {
+  var cgTimers = [];
+  function clearCgTimers() {
+    cgTimers.forEach(clearTimeout);
+    cgTimers = [];
+  }
+  function cgTfStr(x, y, sx, sy) {
+    return "translate(" + (x / CG_REF_W * 100).toFixed(2) + "%," + (y / CG_REF_H * 100).toFixed(2) +
+      "%) scale(" + (sx || 1) + "," + (sy || sx || 1) + ")";
+  }
+  function sizeCgImg(im) {
     if (!im.naturalWidth) return;
     // размер слоя по натуральному размеру картинки в системе координат 1280x720 (масштаб задаётся трансформом)
     im.style.width = (im.naturalWidth / CG_REF_W * 100) + "%";
     im.style.height = (im.naturalHeight / CG_REF_H * 100) + "%";
   }
-  function renderCgItems(list, play) {
-    var cont = el.cgItems;
-    if (!cont) return;
-    var want = {};
+  function findCgLayer(image) {
+    var kids = el.cgItems.children;
+    for (var k = 0; k < kids.length; k++) if (kids[k].dataset.cg === image) return kids[k];
+    return null;
+  }
+  function showCgLayer(it, play) {
+    var layer = findCgLayer(it.image);
+    var sig = JSON.stringify(it);
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.className = "vnCgLayer";
+      layer.dataset.cg = it.image;
+      var im = document.createElement("img");
+      im.onload = function () { sizeCgImg(this); };
+      var cc = assetCache["cgi:" + it.image];
+      var us = cgItemUrls(it.image);
+      setImgWithFallback(im, cc && us[0] !== cc ? [cc].concat(us) : us);
+      layer.appendChild(im);
+      el.cgItems.appendChild(layer);
+    } else if (layer.dataset.sig === sig && !play) {
+      return; // без изменений — не трогаем (длинные анимации продолжают идти)
+    }
+    layer.style.transition = "none";
+    layer.style.opacity = "1";
+    layer.style.zIndex = it.layer || 1;
+    layer.dataset.sig = sig;
+    applyCgAnim(layer, layer.querySelector("img"), it, play);
+  }
+  function hideCgLayer(image, fade) {
+    var layers = image ? [findCgLayer(image)] : Array.prototype.slice.call(el.cgItems.children);
+    layers.forEach(function (layer) {
+      if (!layer) return;
+      layer.dataset.cg = "";
+      layer.style.transition = "opacity " + (fade || 0.3) + "s ease";
+      layer.style.opacity = "0";
+      setTimeout(function () { if (layer.parentElement) layer.parentElement.removeChild(layer); }, (fade || 0.3) * 1000 + 60);
+    });
+  }
+  function renderCgItems(f, play) {
+    if (!el.cgItems) return;
+    clearCgTimers();
+    var list = f.cgItems || [];
+    var events = play ? (f.cgEvents || []) : [];
+    var want = {}, touched = {};
     list.forEach(function (it) { want[it.image] = it; });
-    // убрать отсутствующие слои с затуханием
-    Array.prototype.slice.call(cont.children).forEach(function (layer) {
+    events.forEach(function (ev) {
+      if (ev.type === "show") touched[ev.it.image] = 1;
+      else if (ev.image) touched[ev.image] = 1;
+      else touched["*"] = 1; // hidecgitem без имени касается всех
+    });
+    // убрать слои, которых нет в финале и которых не коснутся события этой страницы
+    Array.prototype.slice.call(el.cgItems.children).forEach(function (layer) {
       var key = layer.dataset.cg;
-      if (key && !want[key]) {
-        layer.dataset.cg = "";
-        layer.getAnimations().forEach(function (a) { a.cancel(); });
-        var im0 = layer.querySelector("img");
-        if (im0) im0.getAnimations().forEach(function (a) { a.cancel(); });
-        layer.style.transition = "opacity .4s ease";
-        layer.style.opacity = "0";
-        setTimeout(function () { if (layer.parentElement) layer.parentElement.removeChild(layer); }, 450);
-      }
+      if (!key || want[key] || touched[key] || touched["*"]) return;
+      hideCgLayer(key, 0.4);
     });
-    // добавить/обновить активные
-    list.forEach(function (it) {
-      var layer = null, kids = cont.children;
-      for (var k = 0; k < kids.length; k++) if (kids[k].dataset.cg === it.image) { layer = kids[k]; break; }
-      var sig = JSON.stringify(it);
-      var fresh = !layer;
-      if (!layer) {
-        layer = document.createElement("div");
-        layer.className = "vnCgLayer";
-        layer.dataset.cg = it.image;
-        var im = document.createElement("img");
-        im.onload = function () { sizeCgImg(this, it); };
-        var cc = assetCache["cgi:" + it.image];
-        var us = cgItemUrls(it.image);
-        setImgWithFallback(im, cc && us[0] !== cc ? [cc].concat(us) : us);
-        layer.appendChild(im);
-        cont.appendChild(layer);
-      } else if (layer.dataset.sig === sig) {
-        return; // без изменений — не дёргаем анимацию
-      }
-      layer.style.zIndex = it.layer || 1;
-      layer.dataset.sig = sig;
-      applyCgAnim(layer, layer.querySelector("img"), it, play || fresh);
-    });
+    if (events.length) {
+      // проиграть план страницы: показы и скрытия в своё время
+      events.forEach(function (ev) {
+        var run = function () {
+          if (ev.type === "show") showCgLayer(ev.it, true);
+          else hideCgLayer(ev.image, ev.fade);
+        };
+        if (ev.at > 0.02) cgTimers.push(setTimeout(run, ev.at * 1000));
+        else run();
+      });
+      // слои финала, не затронутые событиями — обеспечить в покое
+      list.forEach(function (it) { if (!touched[it.image] && !touched["*"]) showCgLayer(it, false); });
+    } else {
+      // покой (перечитывание/назад): финальное состояние без анимаций
+      list.forEach(function (it) { showCgLayer(it, false); });
+    }
   }
   function applyCgAnim(layer, im, it, play) {
     if (!im) return;
-    sizeCgImg(im, it);
+    sizeCgImg(im);
     var pfx = it.pfx / CG_REF_W * 100, pfy = it.pfy / CG_REF_H * 100;
     var ptx = it.ptx / CG_REF_W * 100, pty = it.pty / CG_REF_H * 100;
     var base = "translate(-50%,-50%) ";
@@ -899,7 +989,7 @@
     if (play && it.pdur > 0 && (pfx !== ptx || pfy !== pty)) {
       layer.animate([{ transform: "translate(" + pfx + "%," + pfy + "%)" },
                      { transform: "translate(" + ptx + "%," + pty + "%)" }],
-        { duration: it.pdur * 1000, fill: "forwards", easing: "ease-out" });
+        { duration: it.pdur * 1000, fill: "forwards", easing: "linear" });
     } else layer.style.transform = "translate(" + ptx + "%," + pty + "%)";
     // масштаб (на картинке, вокруг её центра)
     if (play && it.sdur > 0 && it.sfrom !== it.sto) {
