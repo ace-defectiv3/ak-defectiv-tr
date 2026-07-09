@@ -20,8 +20,10 @@
   // --- позиционирование спрайтов (можно крутить) ---
   var SLOT_X = { left: 30, center: 50, right: 70 }; // базовый X слота, % ширины кадра
   var REF_W = 1920, REF_H = 1080; // опорное разрешение для пиксельных сдвигов posto
-  var ART_H = 134;  // высота РИСУНКА персонажа (не картинки), % высоты кадра, до сценарного scale
-  var ART_BOTTOM = -42; // насколько низ рисунка (ступни) уходит за нижний край, %
+  var PX2PCT = 0.104; // высота картинки: % высоты сцены на пиксель картинки (рост ∝ пикселям)
+  var SOFT_KNEE = 140, SOFT_SLOPE = 0.45; // выше 140% рост прирастает вполсилы (макушки не режутся)
+  var BOTTOM_FILL = -42; // низ обрезанного спрайта (ступни) за нижним краем, %
+  var BOTTOM_CLASSIC = -10; // низ классического холста-рамки 1024 у нижнего края, %
   var spriteNatH = {}; // родная высота картинки спрайта в пикселях
   var spriteNatW = {}; // родная ширина
   var spriteMeta = {}; // границы рисунка в картинке: {top,bot,cx} в долях (замер по прозрачности)
@@ -52,15 +54,18 @@
   }
 
   function layoutSprite(box, img, sp, slot) {
-    // раскладка по РИСУНКУ: высота рисунка = ART_H*scale, ступни на базовой линии, центр по центру рисунка
+    // рост ∝ пикселям картинки (у обрезанных спрайтов это рост персонажа);
+    // классические холсты-рамки 1024 (рисунок «плавает» внутри) сохраняют свою встроенную раскладку
     var meta = spriteMeta[sp.name] || { top: 0, bot: 1, cx: 0.5 };
-    var artFrac = Math.max(0.05, meta.bot - meta.top);
-    var h = (ART_H * (sp.scale || 1)) / artFrac; // высота картинки, чтобы рисунок был нужного роста
     var natW = spriteNatW[sp.name] || img.naturalWidth || 1024;
     var natH = spriteNatH[sp.name] || img.naturalHeight || 1024;
-    var w = h * (natW / natH) * 0.5625; // ширина картинки в % ширины сцены (сцена 16:9)
-    var left = SLOT_X[slot] + (sp.x / REF_W) * 100 + (0.5 - meta.cx) * w;
-    var bottom = ART_BOTTOM + (sp.y / REF_H) * 100 - (1 - meta.bot) * h; // прозрачный низ не считается
+    var fills = meta.bot > 0.97; // рисунок доходит до низа картинки -> обрезанный спрайт, низ = ступни
+    var base = natH * PX2PCT;
+    if (base > SOFT_KNEE) base = SOFT_KNEE + (base - SOFT_KNEE) * SOFT_SLOPE; // мягкий потолок роста
+    var h = base * (sp.scale || 1);
+    var w = h * (natW / natH) * 0.5625; // ширина в % ширины сцены (сцена 16:9)
+    var left = SLOT_X[slot] + (sp.x / REF_W) * 100 + (fills ? (0.5 - meta.cx) * w : 0);
+    var bottom = (fills ? BOTTOM_FILL : BOTTOM_CLASSIC) + (sp.y / REF_H) * 100;
     img.style.left = left + "%";
     img.style.height = h + "%";
     img.style.bottom = bottom + "%";
