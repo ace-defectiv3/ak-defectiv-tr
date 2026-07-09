@@ -20,12 +20,72 @@
   // --- позиционирование спрайтов (можно крутить) ---
   var SLOT_X = { left: 30, center: 50, right: 70 }; // базовый X слота, % ширины кадра
   var REF_W = 1920, REF_H = 1080; // опорное разрешение для пиксельных сдвигов posto
-  var REF_CANVAS_H = 1024; // эталонный размер холста (даёт высоту BASE_H)
-  var BASE_H = 114;   // базовая высота для эталонного холста, % высоты кадра
-  var CANVAS_INFLUENCE = 1; // 1 = рост строго по размеру холста (=росту персонажа в игре)
-  var SIZE_MIN = 0.45, SIZE_MAX = 1.25; // пол и потолок: мелкие не исчезают, крупные не теряют голову
-  var BASE_BOTTOM = -42; // насколько низ холста уходит за нижний край, %
-  var spriteNatH = {}; // родная высота холста спрайта в пикселях (из предзагрузки)
+  var ART_H = 134;  // высота РИСУНКА персонажа (не картинки), % высоты кадра, до сценарного scale
+  var ART_BOTTOM = -42; // насколько низ рисунка (ступни) уходит за нижний край, %
+  var spriteNatH = {}; // родная высота картинки спрайта в пикселях
+  var spriteNatW = {}; // родная ширина
+  var spriteMeta = {}; // границы рисунка в картинке: {top,bot,cx} в долях (замер по прозрачности)
+
+  function measureSprite(imgEl, name) {
+    // границы непрозрачного рисунка: нормируют обрезанные и полные холсты к одному виду
+    if (spriteMeta[name] || !imgEl.naturalWidth) return;
+    try {
+      var W = 96, H = Math.max(1, Math.round(imgEl.naturalHeight / imgEl.naturalWidth * W));
+      var cv = document.createElement("canvas");
+      cv.width = W; cv.height = H;
+      var ctx = cv.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(imgEl, 0, 0, W, H);
+      var d = ctx.getImageData(0, 0, W, H).data;
+      var minx = W, maxx = -1, miny = H, maxy = -1;
+      for (var y = 0; y < H; y++)
+        for (var x = 0; x < W; x++)
+          if (d[(y * W + x) * 4 + 3] > 8) {
+            if (x < minx) minx = x; if (x > maxx) maxx = x;
+            if (y < miny) miny = y; if (y > maxy) maxy = y;
+          }
+      spriteMeta[name] = maxy >= 0
+        ? { top: miny / H, bot: (maxy + 1) / H, cx: (minx + maxx + 1) / 2 / W }
+        : { top: 0, bot: 1, cx: 0.5 };
+    } catch (e) {
+      spriteMeta[name] = { top: 0, bot: 1, cx: 0.5 }; // канвас недоступен -> считаем картинку обрезанной
+    }
+  }
+
+  function layoutSprite(box, img, sp, slot) {
+    // раскладка по РИСУНКУ: высота рисунка = ART_H*scale, ступни на базовой линии, центр по центру рисунка
+    var meta = spriteMeta[sp.name] || { top: 0, bot: 1, cx: 0.5 };
+    var artFrac = Math.max(0.05, meta.bot - meta.top);
+    var h = (ART_H * (sp.scale || 1)) / artFrac; // высота картинки, чтобы рисунок был нужного роста
+    var natW = spriteNatW[sp.name] || img.naturalWidth || 1024;
+    var natH = spriteNatH[sp.name] || img.naturalHeight || 1024;
+    var w = h * (natW / natH) * 0.5625; // ширина картинки в % ширины сцены (сцена 16:9)
+    var left = SLOT_X[slot] + (sp.x / REF_W) * 100 + (0.5 - meta.cx) * w;
+    var bottom = ART_BOTTOM + (sp.y / REF_H) * 100 - (1 - meta.bot) * h; // прозрачный низ не считается
+    img.style.left = left + "%";
+    img.style.height = h + "%";
+    img.style.bottom = bottom + "%";
+    img.style.opacity = sp.alpha == null ? 1 : sp.alpha;
+    img.style.filter = sp.dim ? "brightness(.35) saturate(.75)" : "none";
+    var sh = box.querySelector(".vnShadow");
+    if (sh) {
+      if (sp.shadow > 0) {
+        sh.style.left = left + "%";
+        sh.style.bottom = bottom + "%";
+        sh.style.height = h + "%";
+        sh.style.width = w + "%";
+        sh.style.opacity = sp.dim ? 0.65 : 1;
+        sh.style.background = "linear-gradient(to bottom, rgba(0,0,0," + sp.shadow + ") 0%, rgba(0,0,0," +
+          (sp.shadow * 0.92).toFixed(2) + ") 24%, rgba(0,0,0,0) 60%)";
+        var ssrc = img.currentSrc || img.src;
+        if (ssrc && sh.dataset.mask !== ssrc) {
+          var um = 'url("' + ssrc + '")'; sh.style.webkitMaskImage = um; sh.style.maskImage = um; sh.dataset.mask = ssrc;
+        }
+        sh.style.display = "block";
+      } else {
+        sh.style.display = "none";
+      }
+    }
+  }
 
   // ---------- состояние ----------
   var frames = [];
@@ -60,8 +120,8 @@
     var body = ((m[3] || "1").replace(/^0+/, "")) || "1";
     var full = id + "#" + face + "$" + body;
     var variants = [name, full, id + "#" + face, id + "$" + body, id + "#1$1", id];
-    // Aceship на jsdelivr — операторы; akgcc через raw.githubusercontent — NPC и остальное
-    // (jsdelivr не отдаёт файлы из огромного репозитория akgcc, поэтому для него только raw)
+    // akgcc через raw.githubusercontent — полный набор (операторы + NPC), единая обрезка;
+    // Aceship на jsdelivr — запасной (другая обрезка холста, выравнивается замером рисунка)
     var ACE = "https://cdn.jsdelivr.net/gh/Aceship/Arknight-Images@main/avg/characters/";
     var AKG_RAW = "https://raw.githubusercontent.com/akgcc/arkdata/main/assets/avg/characters/";
     var seen = {}, out = [];
@@ -69,10 +129,9 @@
       if (!v || seen[v]) return;
       seen[v] = 1;
       var enc = encodeURIComponent(v);
-      out.push(ACE + enc + ".png"); // операторы (быстрый CDN)
-      out.push(AKG_RAW + enc.toLowerCase() + ".png"); // NPC и всё остальное
+      out.push(AKG_RAW + enc.toLowerCase() + ".png"); // основной: всё в одном месте
+      out.push(ACE + enc + ".png"); // запасной CDN
     });
-    out.push("https://raw.githubusercontent.com/akgcc/arkdata/main/thumbs/" + encodeURIComponent(full).toLowerCase() + ".webp");
     return out;
   }
   function bgUrls(image) {
@@ -474,8 +533,9 @@
     return new Promise(function (resolve) {
       var i = 0;
       var im = new Image();
-      im.onload = function () { resolve({ url: im.src, h: im.naturalHeight }); };
-      im.onerror = function () { i++; if (i < urls.length) im.src = urls[i]; else resolve({ url: null, h: 0 }); };
+      im.crossOrigin = "anonymous"; // тот же режим, что у рендера: кэш браузера совпадает
+      im.onload = function () { resolve({ url: im.src, h: im.naturalHeight, w: im.naturalWidth }); };
+      im.onerror = function () { i++; if (i < urls.length) im.src = urls[i]; else resolve({ url: null, h: 0, w: 0 }); };
       im.src = urls[0];
     });
   }
@@ -511,7 +571,7 @@
       jobs.map(function (j) {
         return loadFirst(j.urls).then(function (res) {
           assetCache[j.key] = res.url || null; // не кэшируем битый адрес: рендер сам переберёт запасные
-          if (j.key.indexOf("sp:") === 0 && res.h) spriteNatH[j.key.slice(3)] = res.h;
+          if (j.key.indexOf("sp:") === 0 && res.h) { spriteNatH[j.key.slice(3)] = res.h; spriteNatW[j.key.slice(3)] = res.w; }
           done++;
           if (onProgress) onProgress(done, total);
         });
@@ -668,26 +728,29 @@
       el.bgActive = next;
     }
 
-    // спрайты: позиция = базовый X слота + posto, высота = база * scale, низ за кадром + posto.y
+    // спрайты: раскладка по рисунку (замер прозрачности), единая для всех библиотек
     ["left", "center", "right"].forEach(function (slot) {
       var box = el.slots[slot];
       var sp = f.sprites[slot];
       if (!sp) { box.innerHTML = ""; box.dataset.name = ""; return; }
+      box.dataset.sp = JSON.stringify(sp); // актуальные параметры для раскладки из onload
       var img = box.querySelector("img");
       if (!img || box.dataset.name !== sp.name) {
         box.innerHTML = "";
         img = document.createElement("img");
+        img.crossOrigin = "anonymous"; // открытый CORS у источников -> можно мерить рисунок канвасом
         var cached = assetCache["sp:" + sp.name];
         var urls = spriteUrls(sp.name);
         if (cached && urls[0] !== cached) urls = [cached].concat(urls); // кэш как подсказка, но с полным запасом
-        var spName = sp.name, spScale = sp.scale || 1;
+        var spName = sp.name, thisBox = box;
         img.onload = function () {
           if (!this.naturalHeight) return;
-          spriteNatH[spName] = this.naturalHeight; // уточняем реальную высоту холста
-          var sf = Math.min(SIZE_MAX, Math.max(SIZE_MIN, 1 + CANVAS_INFLUENCE * (this.naturalHeight / REF_CANVAS_H - 1)));
-          this.style.height = BASE_H * sf * spScale + "%";
-          var shEl = this.parentElement && this.parentElement.querySelector(".vnShadow");
+          spriteNatH[spName] = this.naturalHeight;
+          spriteNatW[spName] = this.naturalWidth;
+          measureSprite(this, spName); // границы рисунка (обрезка/поля/смещение центра)
+          var shEl = thisBox.querySelector(".vnShadow");
           if (shEl) { var u = 'url("' + (this.currentSrc || this.src) + '")'; shEl.style.webkitMaskImage = u; shEl.style.maskImage = u; shEl.dataset.mask = this.currentSrc || this.src; }
+          try { layoutSprite(thisBox, this, JSON.parse(thisBox.dataset.sp || "null") || {}, slot); } catch (e) {}
         };
         setImgWithFallback(img, urls);
         box.appendChild(img);
@@ -696,37 +759,7 @@
         box.appendChild(shadow);
         box.dataset.name = sp.name;
       }
-      var xPct = SLOT_X[slot] + (sp.x / REF_W) * 100;
-      var natH = spriteNatH[sp.name] || REF_CANVAS_H;
-      var sizeFactor = 1 + CANVAS_INFLUENCE * (natH / REF_CANVAS_H - 1); // мягкое влияние размера холста
-      sizeFactor = Math.min(SIZE_MAX, Math.max(SIZE_MIN, sizeFactor)); // с потолком и полом
-      var h = BASE_H * sizeFactor * (sp.scale || 1);
-      var b = BASE_BOTTOM + (sp.y / REF_H) * 100;
-      img.style.left = xPct + "%";
-      img.style.height = h + "%";
-      img.style.bottom = b + "%";
-      img.style.opacity = sp.alpha == null ? 1 : sp.alpha;
-      img.style.filter = sp.dim ? "brightness(.35) saturate(.75)" : "none";
-      // тень-силуэт: градиент, маскированный формой спрайта (темнее у головы)
-      var sh = box.querySelector(".vnShadow");
-      if (sh) {
-        if (sp.shadow > 0) {
-          sh.style.left = xPct + "%";
-          sh.style.bottom = b + "%";
-          sh.style.height = h + "%";
-          sh.style.width = h * (REF_H / REF_W) + "%"; // спрайт квадратный -> ширина = высота в px
-          sh.style.opacity = sp.dim ? 0.65 : 1;
-          sh.style.background = "linear-gradient(to bottom, rgba(0,0,0," + sp.shadow + ") 0%, rgba(0,0,0," +
-            (sp.shadow * 0.92).toFixed(2) + ") 24%, rgba(0,0,0,0) 60%)";
-          var ssrc = img.currentSrc || img.src;
-          if (ssrc && sh.dataset.mask !== ssrc) {
-            var um = 'url("' + ssrc + '")'; sh.style.webkitMaskImage = um; sh.style.maskImage = um; sh.dataset.mask = ssrc;
-          }
-          sh.style.display = "block";
-        } else {
-          sh.style.display = "none";
-        }
-      }
+      layoutSprite(box, img, sp, slot);
     });
 
     // CG-иллюстрация во весь экран
